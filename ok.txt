@@ -1,4 +1,7 @@
 (async function () {
+window.trustedTypes.createPolicy('default', {createHTML: (string, sink) => string})
+
+
     'use strict';
 
     const statusUrl = 'https://api.github.com/repos/dreviliskool/weewewewe/contents/bundle.txt';
