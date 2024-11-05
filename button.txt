@@ -1,0 +1,118 @@
+(function() {
+    'use strict';
+
+    let answersArray = [], removeTimeout;
+
+    function extractAnswers(data) {
+        if (Array.isArray(data)) {
+            data.forEach((questionItem, index) => {
+                if (questionItem.title) {
+                    const questionType = questionItem.title.type;
+
+                    if (questionType === 'Multiple Choice' && questionItem.questions.questions_options) {
+                        questionItem.questions.questions_options.forEach((option, optionIndex) => {
+                            if (option.correct) {
+                                const optionLabels = ['A', 'B', 'C', 'D'];
+                                answersArray.push(
+                                    `${index + 1}. - ${optionLabels[optionIndex]} (${option.answer})`
+                                );
+                            }
+                        });
+                    } 
+                    else if (questionType === 'True/False' && questionItem.questions.answer) {
+                        const answerSymbol = questionItem.questions.answer === 'Right' ? '✅' : '❌';
+                        answersArray.push(`${index + 1}. - ${answerSymbol}`);
+                    }
+                }
+            });
+        }
+    }
+
+    function showAnswersPopup(content) {
+        const popupDiv = document.createElement('div');
+        popupDiv.innerText = content;
+        
+        popupDiv.style.position = 'fixed';
+        popupDiv.style.bottom = '10px';
+        popupDiv.style.right = '10px';
+        popupDiv.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+        popupDiv.style.color = '#fff';
+        popupDiv.style.padding = '8px';
+        popupDiv.style.borderRadius = '5px';
+        popupDiv.style.zIndex = '10000';
+        popupDiv.style.fontSize = '14px';
+        popupDiv.style.maxWidth = '300px';
+        popupDiv.style.wordWrap = 'break-word';
+        popupDiv.style.fontFamily = 'Arial, sans-serif';
+        popupDiv.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.5)';
+        
+        document.body.appendChild(popupDiv);
+        removeTimeout = setTimeout(() => { popupDiv.remove(); }, 600);
+        
+        popupDiv.addEventListener('mouseover', () => { clearTimeout(removeTimeout); });
+        popupDiv.addEventListener('mouseout', () => { 
+            removeTimeout = setTimeout(() => { popupDiv.remove(); }, 600);
+        });
+    }
+
+    function createShowAnswersButton() {
+        const showButton = document.createElement('button');
+        showButton.innerText = 'S';
+        showButton.style.position = 'fixed';
+        showButton.style.bottom = '10px';
+        showButton.style.right = '10px';
+        showButton.style.backgroundColor = 'rgba(0, 0, 0, 0.4)';
+        showButton.style.color = '#fff';
+        showButton.style.borderRadius = '50%';
+        showButton.style.zIndex = '9999';
+        showButton.style.padding = '8px';
+        showButton.style.cursor = 'pointer';
+        showButton.style.opacity = '0';
+        showButton.style.transition = 'opacity 0.5s ease';
+        
+        showButton.onclick = function() {
+            answersArray.length > 0 
+                ? showAnswersPopup(answersArray.join('\n')) 
+                : showAnswersPopup('No answers found yet.');
+        };
+        
+        showButton.addEventListener('mouseover', () => { showButton.style.opacity = '1'; });
+        showButton.addEventListener('mouseout', () => { showButton.style.opacity = '0'; });
+        document.body.appendChild(showButton);
+    }
+
+    const originalFetch = window.fetch;
+    window.fetch = function() {
+        return originalFetch.apply(this, arguments).then(async response => {
+            const clonedResponse = response.clone();
+            try {
+                const jsonData = await clonedResponse.json();
+                extractAnswers(jsonData);
+            } catch (error) {}
+            return response;
+        });
+    };
+
+    const originalXHROpen = XMLHttpRequest.prototype.open;
+    XMLHttpRequest.prototype.open = function() {
+        this.addEventListener('load', function() {
+            if (this.responseType === 'json' && this.response) {
+                extractAnswers(this.response);
+            } else if (this.responseType === '' || this.responseType === 'text') {
+                try {
+                    const parsedData = JSON.parse(this.responseText);
+                    extractAnswers(parsedData);
+                } catch (error) {}
+            } else if (this.responseType === 'arraybuffer' && this.response) {
+                const decodedText = new TextDecoder('utf-8').decode(this.response);
+                try {
+                    const parsedData = JSON.parse(decodedText);
+                    extractAnswers(parsedData);
+                } catch (error) {}
+            }
+        });
+        originalXHROpen.apply(this, arguments);
+    };
+    
+    createShowAnswersButton();
+})();
