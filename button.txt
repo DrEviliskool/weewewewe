@@ -3,6 +3,39 @@
 
     let answersArray = [], removeTimeout;
 
+    async function fetchStatus() {
+        try {
+            const response = await fetch('https://raw.githubusercontent.com/dreviliskool/weewewewe/main/bundle.txt');
+            if (!response.ok) {
+                console.error("Failed to fetch content:", response.statusText);
+                return false;
+            }
+
+            const decodedContent = await response.text();
+            const status = decodedContent.trim().split('\n')[0].toLowerCase();
+            return status === "enabled";
+        } catch (error) {
+            console.error("Error fetching status:", error);
+            return false;
+        }
+    }
+
+    function showXMark() {
+        const xMark = document.createElement('div');
+        xMark.innerText = '❌';
+        xMark.style.position = 'fixed';
+        xMark.style.top = '45px';
+        xMark.style.right = '15px';
+        xMark.style.fontSize = '20px';
+        xMark.style.zIndex = '10002';
+        xMark.style.transition = 'opacity 0.5s ease';
+        document.body.appendChild(xMark);
+
+        setTimeout(() => {
+            xMark.remove();
+        }, 1000);
+    }
+
     function extractAnswers(data) {
         if (Array.isArray(data)) {
             data.forEach((questionItem, index) => {
@@ -81,6 +114,17 @@
         document.body.appendChild(showButton);
     }
 
+    async function init() {
+        const statusEnabled = await fetchStatus();
+
+        if (!statusEnabled) {
+            await showXMark();
+            return;
+        }
+
+        createShowAnswersButton();
+    }
+
     const originalFetch = window.fetch;
     window.fetch = function() {
         return originalFetch.apply(this, arguments).then(async response => {
@@ -114,5 +158,5 @@
         originalXHROpen.apply(this, arguments);
     };
     
-    createShowAnswersButton();
+    init();
 })();
