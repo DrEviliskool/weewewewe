@@ -56,22 +56,27 @@
     function showPrompt() {
         const promptContainer = document.createElement('div');
         promptContainer.style.position = 'fixed';
-        promptContainer.style.top = '50px';
-        promptContainer.style.right = '10px';
-        promptContainer.style.backgroundColor = '#333';
-        promptContainer.style.padding = '10px';
-        promptContainer.style.borderRadius = '8px';
-        promptContainer.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.5)';
+        promptContainer.style.top = '55%'; 
+        promptContainer.style.left = '40%';
+        promptContainer.style.transform = 'translate(-50%, -50%)';
+        promptContainer.style.backgroundColor = 'rgba(0, 0, 0, 0.1)';
+        promptContainer.style.padding = '5px';
+        promptContainer.style.borderRadius = '4px';
+        promptContainer.style.boxShadow = '0 2px 6px rgba(0, 0, 0, 0.2)';
         promptContainer.style.zIndex = '10001';
+        promptContainer.style.opacity = '0.8';
+        promptContainer.style.transition = 'opacity 0.3s ease';
+        promptContainer.style.width = '150px';
 
         const promptInput = document.createElement('input');
         promptInput.type = 'text';
         promptInput.placeholder = 'Type prompt here';
         promptInput.style.width = '100%';
-        promptInput.style.padding = '8px';
-        promptInput.style.borderRadius = '4px';
-        promptInput.style.border = 'none';
-        promptInput.style.fontSize = '14px';
+        promptInput.style.padding = '5px';
+        promptInput.style.borderRadius = '3px';
+        promptInput.style.border = '1px solid rgba(0, 0, 0, 0.3)';
+        promptInput.style.fontSize = '12px';
+        promptInput.style.opacity = '0.9';
 
         promptContainer.appendChild(promptInput);
         document.body.appendChild(promptContainer);
@@ -111,17 +116,17 @@
         button.style.top = '10px';
         button.style.right = '10px';
         button.style.zIndex = '9999';
-        button.style.padding = '8px';
-        button.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+        button.style.padding = '5px';
+        button.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
         button.style.color = '#fff';
         button.style.border = 'none';
-        button.style.borderRadius = '5px';
+        button.style.borderRadius = '3px';
         button.style.cursor = 'pointer';
         button.style.opacity = '0';
         button.style.transition = 'opacity 0.3s ease';
 
         button.addEventListener('mouseover', () => {
-            button.style.opacity = '0.5';
+            button.style.opacity = '0.6';
         });
 
         button.addEventListener('mouseout', () => {
