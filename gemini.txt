@@ -160,7 +160,7 @@
         button.style.top = '10px';
         button.style.right = '10px';
         button.style.zIndex = '9999';
-        button.style.padding = '5px';
+        button.style.padding = '8px';
         button.style.backgroundColor = 'rgba(0, 0, 0, 0.4)';
         button.style.color = '#fff';
         button.style.border = 'none';
