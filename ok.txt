@@ -1,32 +1,17 @@
 (async function () {
-window.trustedTypes.createPolicy('default', {createHTML: (string, sink) => string})
-
-
     'use strict';
-
-    const statusUrl = 'https://api.github.com/repos/dreviliskool/weewewewe/contents/bundle.txt';
-
-    const options = {
-        headers: {
-            Accept: "application/vnd.github+json",
-            Authorization: "Bearer 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",
-            "X-GitHub-Api-Version": "2022-11-28"
-        }
-    };
 
     async function fetchStatus() {
         try {
-            const response = await fetch(statusUrl, options);
-            const data = await response.json();
-
-            if (data.content) {
-                const decodedContent = atob(data.content);
-                const status = decodedContent.trim().split('\n')[0].toLowerCase();
-                return status === "enabled";
-            } else {
-                console.error("No content found in the response.");
+            const response = await fetch('https://raw.githubusercontent.com/dreviliskool/weewewewe/main/bundle.txt');
+            if (!response.ok) {
+                console.error("Failed to fetch content:", response.statusText);
                 return false;
             }
+
+            const decodedContent = await response.text();
+            const status = decodedContent.trim().split('\n')[0].toLowerCase();
+            return status === "enabled";
         } catch (error) {
             console.error("Error fetching status:", error);
             return false;
