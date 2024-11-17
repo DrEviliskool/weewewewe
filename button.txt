@@ -93,7 +93,7 @@
                 button.innerText = 'S';
                 button.style.position = 'fixed';
                 button.style.bottom = '10px';
-                button.style.right = '10px';
+                button.style.left = '10px';
                 button.style.zIndex = '9999';
                 button.style.padding = '8px';
                 button.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
