@@ -1,34 +1,40 @@
 (async function () {
     'use strict';
+    console.log('111')
 
     async function fetchUserId() {
         return new Promise((resolve) => {
-            const originalConsoleLog = console.log;
+            // Create a hidden iframe to intercept console logs
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            document.body.appendChild(iframe);
 
-            // Wrap console.log to monitor its output
-            const wrappedConsoleLog = function (...args) {
-                originalConsoleLog.apply(console, args); // Call the original console.log
+            const iframeConsole = iframe.contentWindow.console;
+            const originalConsoleLog = iframeConsole.log;
+
+            iframeConsole.log = function (...args) {
+                originalConsoleLog.apply(iframeConsole, args); // Call the original console.log
                 
-                // Check if one of the arguments contains the `id` field
+                // Check if any argument is an object containing `id`
                 args.forEach((arg) => {
                     if (arg && typeof arg === 'object' && arg.id) {
-                        resolve(arg.id); // Extract the `id` field
+                        resolve(arg.id); // Resolve the ID
+                        document.body.removeChild(iframe); // Clean up iframe
                     }
                 });
             };
 
-            // Temporarily replace console.log with the wrapped version
+            // Redirect global console.log to iframe's console.log
             Object.defineProperty(console, 'log', {
-                value: wrappedConsoleLog,
-                configurable: true, // Allow redefinition later
+                value: iframeConsole.log,
+                writable: true,
+                configurable: true,
             });
 
-            // Fallback: Resolve after 5 seconds if no user ID is found
+            // Fallback: Resolve after 5 seconds if no ID is found
             setTimeout(() => {
-                Object.defineProperty(console, 'log', {
-                    value: originalConsoleLog, // Restore the original console.log
-                });
-                resolve(null); // Resolve with `null` if no ID is found
+                document.body.removeChild(iframe); // Clean up iframe
+                resolve(null); // Resolve with null
             }, 5000);
         });
     }
