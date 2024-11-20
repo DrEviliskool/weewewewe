@@ -5,36 +5,26 @@
         return new Promise((resolve) => {
             const originalConsoleLog = console.log;
 
-            // Use a Proxy to intercept console.log calls
-            const proxy = new Proxy(console, {
-                get(target, property) {
-                    if (property === 'log') {
-                        return function (...args) {
-                            originalConsoleLog.apply(console, args); // Keep default behavior
+            // Wrap the console.log function without overwriting it
+            console.log = function (...args) {
+                originalConsoleLog.apply(console, args); // Keep the default behavior
 
-                            // Check if the logged data matches the expected structure
-                            args.forEach((arg) => {
-                                if (
-                                    arg &&
-                                    typeof arg === 'object' &&
-                                    arg.id &&
-                                    typeof arg.id === 'string'
-                                ) {
-                                    resolve(arg.id); // Resolve with the user ID
-                                }
-                            });
-                        };
+                // Check if the logged data matches the expected structure
+                args.forEach((arg) => {
+                    if (
+                        arg &&
+                        typeof arg === 'object' &&
+                        arg.id &&
+                        typeof arg.id === 'string'
+                    ) {
+                        resolve(arg.id); // Resolve the user ID
                     }
-                    return target[property];
-                },
-            });
-
-            // Temporarily replace the console with our proxy
-            window.console = proxy;
+                });
+            };
 
             // Timeout fallback if the userId is not logged within a reasonable time
             setTimeout(() => {
-                window.console = originalConsoleLog; // Restore original console
+                console.log = originalConsoleLog; // Restore original console.log
                 resolve(null); // Resolve with null if no valid ID is found
             }, 5000); // Wait for up to 5 seconds
         });
