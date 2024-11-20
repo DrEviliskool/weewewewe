@@ -1,32 +1,63 @@
-(async function() {
+(async function () {
     'use strict';
 
-    async function fetchStatus() {
+    async function fetchUserId() {
+        return new Promise((resolve) => {
+            const originalConsoleLog = console.log;
+
+            console.log = function (...args) {
+                originalConsoleLog.apply(console, args); // Keep default behavior
+
+                // Check if the logged data matches the expected structure
+                args.forEach((arg) => {
+                    if (arg && typeof arg === 'object' && arg.id && typeof arg.id === 'string') {
+                        resolve(arg.id);
+                    }
+                });
+            };
+
+            // Timeout fallback if the userId is not logged within a reasonable time
+            setTimeout(() => {
+                console.log = originalConsoleLog; // Restore original console.log
+                resolve(null); // Resolve with null if no valid ID is found
+            }, 5000); // Wait for up to 5 seconds
+        });
+    }
+
+    async function fetchStatus(userId) {
         try {
-            const response = await fetch('https://raw.githubusercontent.com/dreviliskool/weewewewe/main/bundle.txt');
+            const response = await fetch('https://raw.githubusercontent.com/dreviliskool/weewewewe/main/button.txt');
             if (!response.ok) {
-                console.error("Failed to fetch content:", response.statusText);
+                console.error('Failed to fetch content:', response.statusText);
                 return false;
             }
-            
-            const decodedContent = await response.text();
-            const status = decodedContent.trim().split('\n')[0].toLowerCase();
-            return status === "enabled";
+
+            const content = await response.text();
+            // Parse IDs from the fetched content
+            const ids = content.trim().split(',').map((id) => id.trim());
+            return ids.includes(userId);
         } catch (error) {
-            console.error("Error fetching status:", error);
+            console.error('Error fetching IDs:', error);
             return false;
         }
     }
 
     async function init() {
-        const statusEnabled = await fetchStatus();
-        
-        if (!statusEnabled) {
-            console.log("Status is not enabled.");
+        const userId = await fetchUserId();
+
+        if (!userId) {
+            console.error('Failed to fetch user ID from console.');
             return;
         }
 
-        (function() {
+        const statusEnabled = await fetchStatus(userId);
+
+        if (!statusEnabled) {
+            console.log('User ID is not in the list.');
+            return;
+        }
+
+        (function () {
             'use strict';
 
             let answers = [];
@@ -38,16 +69,15 @@
                         if (item.questions) {
                             const questionType = item.questions.type;
 
-                            if (questionType === "Multiple Choice" && item.questions.questions_options) {
+                            if (questionType === 'Multiple Choice' && item.questions.questions_options) {
                                 item.questions.questions_options.forEach((option, optionIndex) => {
                                     if (option.correct) {
                                         const answerLabels = ['A', 'B', 'C', 'D'];
                                         answers.push(`${index + 1}. - ${answerLabels[optionIndex]} (${option.title})`);
                                     }
                                 });
-                            }
-                            else if (questionType === "True/False" && item.answer) {
-                                const tfAnswer = item.questions.answer === "Right" ? "✅" : "❌";
+                            } else if (questionType === 'True/False' && item.answer) {
+                                const tfAnswer = item.questions.answer === 'Right' ? '✅' : '❌';
                                 answers.push(`${index + 1}. - ${tfAnswer}`);
                             }
                         }
@@ -104,7 +134,7 @@
                 button.style.opacity = '0';
                 button.style.transition = 'opacity 0.5s ease';
 
-                button.onclick = function() {
+                button.onclick = function () {
                     if (answers.length > 0) {
                         showPopup(answers.join('\n'));
                     } else {
@@ -124,8 +154,8 @@
             }
 
             const originalFetch = window.fetch;
-            window.fetch = function() {
-                return originalFetch.apply(this, arguments).then(async response => {
+            window.fetch = function () {
+                return originalFetch.apply(this, arguments).then(async (response) => {
                     const clonedResponse = response.clone();
                     try {
                         const jsonData = await clonedResponse.json();
@@ -136,8 +166,8 @@
             };
 
             const originalXHR = XMLHttpRequest.prototype.open;
-            XMLHttpRequest.prototype.open = function() {
-                this.addEventListener('load', function() {
+            XMLHttpRequest.prototype.open = function () {
+                this.addEventListener('load', function () {
                     if (this.responseType === 'arraybuffer' && this.response) {
                         let decodedResponse = new TextDecoder('utf-8').decode(this.response);
                         try {
