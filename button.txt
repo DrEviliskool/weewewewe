@@ -1,13 +1,3 @@
-// ==UserScript==
-// @name         AAA+ZZZ
-// @version      99.99
-// @description  AAAA+ZZZZ
-// @author       You
-// @match        https://student.nis-blb.com/*
-// @match        http://student.nis-blb.com/*
-// @grant        none
-// ==/UserScript==
-
 (function () {
     'use strict';
 
