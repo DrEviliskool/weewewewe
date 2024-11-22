@@ -176,22 +176,26 @@
                             },
                             body: JSON.stringify(body)
                         })
-                        .then(response => {
-                            if (!response.ok) {
-                                throw new Error(`HTTP error! Status: ${response.status}`);
-                            }
-                            return response.json();
-                        })
-                        .then(data => {
-                            const resultText = data.candidates[0].content.parts[0].text.trim();
-                            GM_setClipboard(resultText);
-                            showCheckmark();
-                            return resultText;
-                        })
-                        .catch(error => {
-                            console.error("Error fetching from Gemini:", error);
-                            return "Error: Could not retrieve response from Gemini.";
-                        });
+                            .then(response => {
+                                if (!response.ok) {
+                                    throw new Error(`HTTP error! Status: ${response.status}`);
+                                }
+                                return response.json();
+                            })
+                            .then(data => {
+                                const resultText = data.candidates[0].content.parts[0].text.trim();
+                                if (typeof GM_setClipboard === 'function') {
+                                    GM_setClipboard(resultText);
+                                } else {
+                                    navigator.clipboard.writeText(resultText).catch(err => console.error("Clipboard error:", err));
+                                }
+                                showCheckmark();
+                                return resultText;
+                            })
+                            .catch(error => {
+                                console.error("Error fetching from Gemini:", error);
+                                return "Error: Could not retrieve response from Gemini.";
+                            });
                     }
 
                     function showCheckmark() {
