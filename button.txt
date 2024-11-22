@@ -172,11 +172,11 @@
 
                 async function geminilmaoo() {
                     'use strict';
-            
-                
+
+
                     async function getGeminiResponse(prompt) {
                         const apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + apiKey;
-                
+
                         const body = {
                             contents: [{
                                 parts: [{
@@ -184,7 +184,7 @@
                                 }]
                             }]
                         };
-                
+
                         return fetch(apiUrl, {
                             method: 'POST',
                             headers: {
@@ -209,7 +209,7 @@
                             return "Error: Could not retrieve response from Gemini.";
                         });
                     }
-                
+
                     function showCheckmark() {
                         const checkmark = document.createElement('div');
                         checkmark.innerText = '✅';
@@ -220,12 +220,12 @@
                         checkmark.style.zIndex = '10002';
                         checkmark.style.transition = 'opacity 0.5s ease';
                         document.body.appendChild(checkmark);
-                
+
                         setTimeout(() => {
                             checkmark.remove();
                         }, 800);
                     }
-                
+
                     function showPrompt() {
                         const promptContainer = document.createElement('div');
                         promptContainer.style.position = 'fixed';
@@ -240,7 +240,7 @@
                         promptContainer.style.opacity = '0.8';
                         promptContainer.style.transition = 'opacity 0.3s ease';
                         promptContainer.style.width = '150px';
-                
+
                         const promptInput = document.createElement('input');
                         promptInput.type = 'text';
                         promptInput.placeholder = 'Type prompt here';
@@ -250,27 +250,27 @@
                         promptInput.style.border = '1px solid rgba(0, 0, 0, 0.3)';
                         promptInput.style.fontSize = '12px';
                         promptInput.style.opacity = '0.9';
-                
+
                         promptContainer.appendChild(promptInput);
                         document.body.appendChild(promptContainer);
-                
+
                         promptInput.focus();
-                
+
                         function removePrompt() {
                             promptContainer.remove();
                             document.removeEventListener('click', onOutsideClick);
                         }
-                
+
                         function onOutsideClick(event) {
                             if (!promptContainer.contains(event.target) && event.target !== promptInput) {
                                 removePrompt();
                             }
                         }
-                
+
                         setTimeout(() => {
                             document.addEventListener('click', onOutsideClick);
                         }, 10);
-                
+
                         promptInput.addEventListener('keydown', async function (event) {
                             if (event.key === 'Enter') {
                                 const promptText = promptInput.value;
@@ -281,7 +281,7 @@
                             }
                         });
                     }
-                
+
                     function createButton() {
                         const button = document.createElement('button');
                         button.innerText = 'A';
@@ -297,27 +297,27 @@
                         button.style.cursor = 'pointer';
                         button.style.opacity = '0';
                         button.style.transition = 'opacity 0.5s ease';
-                
+
                         button.addEventListener('mouseover', () => {
                             button.style.opacity = '1';
                         });
-                
+
                         button.addEventListener('mouseout', () => {
                             button.style.opacity = '0';
                         });
-                
+
                         button.onclick = showPrompt;
-                
+
                         document.body.appendChild(button);
                     }
-                
+
                     async function init() {
                         createButton();
                     }
-                
+
                     await init();
                 }
-                
+
 
                 await buttonlmaoo();
                 await geminilmaoo();
