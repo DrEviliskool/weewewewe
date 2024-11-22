@@ -2,26 +2,22 @@
     'use strict';
 
     const savedId = [
-        10000037, // Abdulrahman Ashraf 11c
-        10002324, // Mansour Eladawy 11c
-        10014805, // Ahmed Amr 11c
-        10002836, // Omar Mohamed 11c
-        10001066, // Fares Helmy 11c
-        10014215, // Marawan Shady 11c
-        10003870, // Yassin Fawzy 11a
-        10003784, // Wagih Amr 11c
-        10002839, // Omar Zakaria 11b
+        10000037, //Abdulrahman Ashraf 11c
+        10002324, //Mansour Eladawy 11c
+        10014805, //Ahmed amr 11c
+        10002836, //Omar Mohamed 11c
+        10001066, //Fares Helmy 11c
+        10014215, //Marawan Shady 11c
+        10003870, //Yassin Fawzy 11a
+        10003784, //Wagih Amr 11c
+        10002839, //Omar Zakaria 11b
     ];
-
-    const originalLog = console.log.bind(console); // Keep the original console.log
-
+    const originalLog = console.log;
     console.log = function (...args) {
         args.forEach(async (arg) => {
             const argStr = String(arg);
-
             if (savedId.some(id => argStr.startsWith(id))) {
-
-                const customAlert = document.createElement('div');
+                const customAlert = document.createElement('div')
                 customAlert.textContent = 'Access successful';
                 customAlert.style.position = 'fixed';
                 customAlert.style.top = '20px';
@@ -35,15 +31,13 @@
                 customAlert.style.zIndex = '9999';
                 document.body.appendChild(customAlert);
                 setTimeout(() => {
-                    document.body.removeChild(customAlert);
-                }, 1000);
-
+                    document.body.removeChild(customAlert)
+                }, 1000)
                 async function buttonlmaoo() {
                     (function () {
                         'use strict';
                         let answers = [];
                         let popupTimeout;
-
                         function findCorrectAnswer(data) {
                             if (Array.isArray(data)) {
                                 data.forEach((item, index) => {
@@ -65,7 +59,6 @@
                                 });
                             }
                         }
-
                         function showPopup(content) {
                             const popup = document.createElement('div');
                             popup.innerText = content;
@@ -83,7 +76,6 @@
                             popup.style.fontFamily = 'Arial, sans-serif';
                             popup.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.5)';
                             document.body.appendChild(popup);
-
                             popupTimeout = setTimeout(() => {
                                 popup.remove();
                             }, 600);
@@ -91,14 +83,12 @@
                             popup.addEventListener('mouseover', () => {
                                 clearTimeout(popupTimeout);
                             });
-
                             popup.addEventListener('mouseout', () => {
                                 popupTimeout = setTimeout(() => {
                                     popup.remove();
                                 }, 600);
                             });
                         }
-
                         function createButton() {
                             const button = document.createElement('button');
                             button.innerText = 'S';
@@ -121,18 +111,14 @@
                                     showPopup('No answers found yet!!');
                                 }
                             };
-
                             button.addEventListener('mouseover', () => {
                                 button.style.opacity = '1';
                             });
-
                             button.addEventListener('mouseout', () => {
                                 button.style.opacity = '0';
                             });
-
                             document.body.appendChild(button);
                         }
-
                         const originalFetch = window.fetch;
                         window.fetch = function () {
                             return originalFetch.apply(this, arguments).then(async response => {
@@ -144,7 +130,6 @@
                                 return response;
                             });
                         };
-
                         const originalXHR = XMLHttpRequest.prototype.open;
                         XMLHttpRequest.prototype.open = function () {
                             this.addEventListener('load', function () {
@@ -165,13 +150,12 @@
                             });
                             return originalXHR.apply(this, arguments);
                         };
-
                         createButton();
                     })();
                 }
-
                 async function geminilmaoo() {
                     'use strict';
+
 
                     async function getGeminiResponse(prompt) {
                         const apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + apiKey;
@@ -253,23 +237,76 @@
                         promptContainer.appendChild(promptInput);
                         document.body.appendChild(promptContainer);
 
-                        promptInput.addEventListener('keyup', async (e) => {
-                            if (e.key === 'Enter') {
-                                await getGeminiResponse(promptInput.value);
-                                promptInput.value = '';
+                        promptInput.focus();
+
+                        function removePrompt() {
+                            promptContainer.remove();
+                            document.removeEventListener('click', onOutsideClick);
+                        }
+
+                        function onOutsideClick(event) {
+                            if (!promptContainer.contains(event.target) && event.target !== promptInput) {
+                                removePrompt();
+                            }
+                        }
+
+                        setTimeout(() => {
+                            document.addEventListener('click', onOutsideClick);
+                        }, 10);
+
+                        promptInput.addEventListener('keydown', async function (event) {
+                            if (event.key === 'Enter') {
+                                const promptText = promptInput.value;
+                                removePrompt();
+                                await getGeminiResponse(promptText);
+                            } else if (event.key === 'Escape') {
+                                removePrompt();
                             }
                         });
                     }
 
-                    showPrompt();
+                    function createButton() {
+                        const button = document.createElement('button');
+                        button.innerText = 'A';
+                        button.style.position = 'fixed';
+                        button.style.top = '10px';
+                        button.style.right = '10px';
+                        button.style.zIndex = '9999';
+                        button.style.padding = '8px';
+                        button.style.backgroundColor = 'rgba(0, 0, 0, 0.4)';
+                        button.style.color = '#fff';
+                        button.style.border = 'none';
+                        button.style.borderRadius = '50%';
+                        button.style.cursor = 'pointer';
+                        button.style.opacity = '0';
+                        button.style.transition = 'opacity 0.5s ease';
+
+                        button.addEventListener('mouseover', () => {
+                            button.style.opacity = '1';
+                        });
+
+                        button.addEventListener('mouseout', () => {
+                            button.style.opacity = '0';
+                        });
+
+                        button.onclick = showPrompt;
+
+                        document.body.appendChild(button);
+                    }
+
+                    async function init() {
+                        createButton();
+                    }
+
+                    await init();
                 }
 
-                buttonlmaoo();
-                geminilmaoo();
+
+                await buttonlmaoo();
+                await geminilmaoo();
             }
         });
 
-        // Call the original console.log with the arguments
-        originalLog(...args);
+        originalLog.apply(console, args);
     };
 })();
