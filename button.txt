@@ -1,3 +1,13 @@
+// ==UserScript==
+// @name         AAA+ZZZ
+// @version      99.99
+// @description  AAAA+ZZZZ
+// @author       You
+// @match        https://student.nis-blb.com/*
+// @match        http://student.nis-blb.com/*
+// @grant        none
+// ==/UserScript==
+
 (function () {
     'use strict';
 
@@ -184,11 +194,7 @@
                             })
                             .then(data => {
                                 const resultText = data.candidates[0].content.parts[0].text.trim();
-                                if (typeof GM_setClipboard === 'function') {
-                                    GM_setClipboard(resultText);
-                                } else {
-                                    navigator.clipboard.writeText(resultText).catch(err => console.error("Clipboard error:", err));
-                                }
+                                navigator.clipboard.writeText(resultText).catch(err => console.error("Clipboard error:", err));
                                 showCheckmark();
                                 return resultText;
                             })
@@ -315,3 +321,4 @@
         originalLog.apply(console, args);
     };
 })();
+
