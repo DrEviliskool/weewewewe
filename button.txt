@@ -1,4 +1,5 @@
 (function () {
+    console.log('okk')
     'use strict';
 
     const savedId = [
