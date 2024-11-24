@@ -12,6 +12,7 @@
         10003870, //Yassin Fawzy 11a
         10003784, //Wagih Amr 11c
         10002839, //Omar Zakaria 11b
+        10000161, //Ada Tamer 11c
     ];
     const originalLog = console.log;
     console.log = function (...args) {
