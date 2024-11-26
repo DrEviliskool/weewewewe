@@ -14,6 +14,8 @@
         10002839, //Omar Zakaria 11b
         10000161, //Adam Tamer 11c
         10002724, //Nezar Ajloni 11c
+        10014808, //Ahmed Hamzawy 11c
+        1, //Yassin Soly 11c
     ];
     const originalLog = console.log;
     console.log = function (...args) {
