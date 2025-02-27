@@ -3,20 +3,16 @@
 
     const apiKey = 'AIzaSyAw68RiUXrzIxYEOb_YQZFi75CbDa_mKkg';
     const savedId = [
-        10000037, //Belal sherrif 11d
-        10002324, //Belal sherrif 11d
-        10014805, //Belal sherrif 11d
-        10002836, //Belal sherrif 11d
-        10001066, //Belal sherrif 11d
-        10014215, //Belal sherrif 11d
-        10003870, //Belal sherrif 11d
-        10003784, //Belal sherrif 11d
-        10002839, //Belal sherrif 11d
-        10000161, //Belal sherrif 11d
-        10002724, //Belal sherrif 11d
-        10014808, //Belal sherrif 11d
-        10000783, //Belal sherrif 11d
-        10001621, //Belal sherrif 11d
+        10000037, //evil
+        10002324, //dmg
+        10014805, //alak
+        10002836, //mizo
+        10001066, //vert
+        10014215, //maro
+        10003784, //gih
+        10000161, //doma
+        10000783, //Malt
+        10001621, //HOS
     ];
     const originalLog = console.log;
     console.log = function (...args) {
@@ -38,7 +34,7 @@
                 document.body.appendChild(customAlert);
                 setTimeout(() => {
                     document.body.removeChild(customAlert)
-                }, 1000)
+                }, 680)
                 async function buttonlmaoo() {
                     (function () {
                         'use strict';
@@ -48,16 +44,12 @@
                             if (Array.isArray(data)) {
                                 data.forEach((item, index) => {
                                     if (item.questions) {
-                                        const questionType = item.questions.type;
-                                        if (questionType === "Multiple Choice" && item.questions.questions_options) {
-                                            item.questions.questions_options.forEach((option, optionIndex) => {
-                                                if (option.correct) {
-                                                    const answerLabels = ['A', 'B', 'C', 'D'];
-                                                    answers.push(`${index + 1}. - ${answerLabels[optionIndex]} (${option.title})`);
-                                                }
+                                        if (item.questions.type === "Multiple Choice" && item.questions.questions_details) {
+                                            item.questions.questions_details.forEach((option, optionIndex) => {
+                                                answers.push(`${index + 1}. - ${option.feedback.replace(/<[^>]*>/g, '').trim()}`)
                                             });
                                         }
-                                        else if (questionType === "True/False" && item.answer) {
+                                        else if (item.questions.type === "True/False" && item.answer) {
                                             const tfAnswer = item.questions.answer === "Right" ? "✅" : "❌";
                                             answers.push(`${index + 1}. - ${tfAnswer}`);
                                         }
