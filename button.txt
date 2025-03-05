@@ -13,6 +13,7 @@
         10000161, //doma
         10000783, //Malt
         10001621, //HOS
+        10001066, //Sisi
     ];
     const originalLog = console.log;
     console.log = function (...args) {
