@@ -15,6 +15,7 @@
         10001621, //HOS
         10037152, //Sisi
         10002839, //Mazika
+        10002724, //Nizo
     ];
     const originalLog = console.log;
 
