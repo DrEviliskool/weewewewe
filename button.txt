@@ -43,12 +43,12 @@
 
                         function findCorrectAnswer(data) {
                             if (Array.isArray(data)) {
-                                data.forEach((item, index) => {
+                                data.forEach(async (item, indexx) => {
                                     if (item.questions) {
                                         const questionType = item.questions.type;
                                         const questionNumber = item.question;
 
-                                        fetch(`https://blb2024-o5xlbifnea-uc.a.run.app/questions/${questionNumber}`, {
+                                        await fetch(`https://blb2024-o5xlbifnea-uc.a.run.app/questions/${questionNumber}`, {
                                             method: "GET",
                                             headers: {
                                                 "accept": "*/*",
@@ -61,15 +61,15 @@
                                         })
                                             .then(res => res.json())
                                             .then(async (data) => {
-                                                const options = data.questions_options || [];
-                                                const correctOption = options.find(opt => opt.correct);
+                                                const options = await data.questions_options || [];
+                                                const correctOption = await options.find(opt => opt.correct);
 
                                                 if (correctOption) {
                                                     const optionLabels = ["A", "B", "C", "D", "E", "F", "G"];
-                                                    const index = options.indexOf(correctOption);
-                                                    const label = optionLabels[index] || `Option ${index + 1}`;
-                                                    answers.push(`${index + 1}. ${label} (${correctOption.title})`);
-                                                    console.log(`Correct Answer: ${label}) ${correctOption.title}`);
+                                                    const index = await options.indexOf(correctOption);
+                                                    const label = await optionLabels[index] || await `Option ${index + 1}`;
+                                                    await answers.push(`${indexx + 1}. ${label} (${correctOption.title})`);
+                                                    await console.log(`Correct Answer: ${label}) ${correctOption.title}`);
                                                 } else {
                                                     console.log("No correct option found.");
                                                 }
