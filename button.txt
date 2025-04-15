@@ -78,7 +78,7 @@
 
                                         if (questionType === "True/False" && item.answer) {
                                             const tfAnswer = item.questions.answer === "Right" ? "✅" : "❌";
-                                            console.log(`${index + 1}. - ${tfAnswer}`);
+                                            await console.log(`${index + 1}. - ${tfAnswer}`);
                                         }
                                     }
                                 });
@@ -116,9 +116,9 @@
 
                             button.onclick = () => {
                                 if (answers.length > 0) {
-                                    showPopup(answers.join('\n'));
+                                    await showPopup(answers.join('\n'));
                                 } else {
-                                    showPopup('No answers found yet!!');
+                                    await showPopup('No answers found yet!!');
                                 }
                             };
 
