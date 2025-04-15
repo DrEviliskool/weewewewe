@@ -179,7 +179,7 @@
 
         button.onclick = showPrompt;
 
-        document.body.appendChild(button);
+        //document.body.appendChild(button);
     }
 
     init();
