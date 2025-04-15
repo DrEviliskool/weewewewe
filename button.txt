@@ -23,14 +23,18 @@
         args.forEach(async (arg) => {
             const argStr = String(arg);
             if (savedId.some(id => argStr.startsWith(id))) {
-                const customAlert = document.createElement('div');
+                const customAlert = document.createElement('div')
                 customAlert.textContent = 'Access successful';
-                Object.assign(customAlert.style, {
-                    position: 'fixed', top: '20px', left: '50%',
-                    transform: 'translateX(-50%)', backgroundColor: '#333',
-                    color: '#fff', padding: '10px 20px', borderRadius: '5px',
-                    boxShadow: '0 2px 5px rgba(0, 0, 0, 0.2)', zIndex: '9999'
-                });
+                customAlert.style.position = 'fixed';
+                customAlert.style.top = '20px';
+                customAlert.style.left = '50%';
+                customAlert.style.transform = 'translateX(-50%)';
+                customAlert.style.backgroundColor = '#333';
+                customAlert.style.color = '#fff';
+                customAlert.style.padding = '10px 20px';
+                customAlert.style.borderRadius = '5px';
+                customAlert.style.boxShadow = '0 2px 5px rgba(0, 0, 0, 0.2)';
+                customAlert.style.zIndex = '9999';
                 document.body.appendChild(customAlert);
                 setTimeout(() => {
                     document.body.removeChild(customAlert);
