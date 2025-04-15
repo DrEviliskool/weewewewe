@@ -109,7 +109,7 @@
                             });
                         }
 
-                        function createButton() {
+                        async function createButton() {
                             const button = document.createElement('button');
                             button.innerText = 'S';
                             Object.assign(button.style, {
@@ -119,7 +119,7 @@
                                 opacity: '0', transition: 'opacity 0.5s ease'
                             });
 
-                            button.onclick = () => {
+                            button.onclick = async () => {
                                 if (answers.length > 0) {
                                     await showPopup(answers.join('\n'));
                                 } else {
