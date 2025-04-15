@@ -1,9 +1,16 @@
+
+
+
+
+
+
+
 (function () {
     'use strict';
 
     const apiKey = 'AIzaSyAw68RiUXrzIxYEOb_YQZFi75CbDa_mKkg';
     const savedId = [
-        10000037, //evil
+        10000037, //ana
         10002324, //dmg
         10014805, //alak
         10002836, //mizo
@@ -17,108 +24,116 @@
         10002839, //Mazika
     ];
     const originalLog = console.log;
+
     console.log = function (...args) {
         args.forEach(async (arg) => {
             const argStr = String(arg);
             if (savedId.some(id => argStr.startsWith(id))) {
-                const customAlert = document.createElement('div')
+                const customAlert = document.createElement('div');
                 customAlert.textContent = 'Access successful';
-                customAlert.style.position = 'fixed';
-                customAlert.style.top = '20px';
-                customAlert.style.left = '50%';
-                customAlert.style.transform = 'translateX(-50%)';
-                customAlert.style.backgroundColor = '#333';
-                customAlert.style.color = '#fff';
-                customAlert.style.padding = '10px 20px';
-                customAlert.style.borderRadius = '5px';
-                customAlert.style.boxShadow = '0 2px 5px rgba(0, 0, 0, 0.2)';
-                customAlert.style.zIndex = '9999';
+                Object.assign(customAlert.style, {
+                    position: 'fixed', top: '20px', left: '50%',
+                    transform: 'translateX(-50%)', backgroundColor: '#333',
+                    color: '#fff', padding: '10px 20px', borderRadius: '5px',
+                    boxShadow: '0 2px 5px rgba(0, 0, 0, 0.2)', zIndex: '9999'
+                });
                 document.body.appendChild(customAlert);
                 setTimeout(() => {
-                    document.body.removeChild(customAlert)
-                }, 680)
+                    document.body.removeChild(customAlert);
+                }, 680);
+
                 async function buttonlmaoo() {
                     (function () {
                         'use strict';
                         let answers = [];
                         let popupTimeout;
+
                         function findCorrectAnswer(data) {
                             if (Array.isArray(data)) {
                                 data.forEach((item, index) => {
                                     if (item.questions) {
-                                        if (item.questions.type === "Multiple Choice" && item.questions.questions_details) {
-                                            item.questions.questions_details.forEach((option, optionIndex) => {
-                                                answers.push(`${index + 1}. - ${option.feedback.replace(/<[^>]*>/g, '').trim()}`)
-                                            });
-                                        }
-                                        else if (item.questions.type === "True/False" && item.answer) {
+                                        const questionType = item.questions.type;
+                                        const questionNumber = item.question;
+
+                                        fetch(`https://blb2024-o5xlbifnea-uc.a.run.app/questions/${questionNumber}`, {
+                                            method: "GET",
+                                            headers: {
+                                                "accept": "*/*",
+                                                "content-type": "application/json",
+                                                "origin": "https://student.nis-blb.com",
+                                                "referer": "https://student.nis-blb.com/",
+                                                "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IkFiZGVscmFobWFuIEFzaHJhZiBGYXJvdWsiLCJpZCI6MTAwMDAwMzcsInJvbGUiOiJzdHVkZW50IiwiY29ob3J0IjozOTIsImJ5X3N1YmplY3QiOm51bGwsImdyYWRlIjo5NSwiY2xhc3Nyb29tIjozMjYsImlhdCI6MTc0NDYxNzI4MSwiZXhwIjoxNzQ0NjE3MzQxfQ.RigkTycjWT_Ea-Gh9q-hH0M1zkr6ihbCvCaBJ9K_bwQ",
+                                                "type": "student"
+                                            }
+                                        })
+                                            .then(res => res.json())
+                                            .then(async (data) => {
+                                                const options = data.questions_options || [];
+                                                const correctOption = options.find(opt => opt.correct);
+
+                                                if (correctOption) {
+                                                    const optionLabels = ["A", "B", "C", "D", "E", "F", "G"];
+                                                    const index = options.indexOf(correctOption);
+                                                    const label = optionLabels[index] || `Option ${index + 1}`;
+                                                    answers.push(`${index + 1}. ${label} (${correctOption.title})`);
+                                                    console.log(`Correct Answer: ${label}) ${correctOption.title}`);
+                                                } else {
+                                                    console.log("No correct option found.");
+                                                }
+                                            })
+                                            .catch(err => console.log(err));
+
+                                        if (questionType === "True/False" && item.answer) {
                                             const tfAnswer = item.questions.answer === "Right" ? "✅" : "❌";
-                                            answers.push(`${index + 1}. - ${tfAnswer}`);
+                                            console.log(`${index + 1}. - ${tfAnswer}`);
                                         }
                                     }
                                 });
                             }
                         }
+
                         function showPopup(content) {
                             const popup = document.createElement('div');
                             popup.innerText = content;
-                            popup.style.position = 'fixed';
-                            popup.style.top = '10px';
-                            popup.style.right = '10px';
-                            popup.style.padding = '10px';
-                            popup.style.backgroundColor = 'rgba(0, 0, 0, 0.4)';
-                            popup.style.color = '#fff';
-                            popup.style.borderRadius = '15px';
-                            popup.style.zIndex = '10000';
-                            popup.style.fontSize = '14px';
-                            popup.style.maxWidth = '300px';
-                            popup.style.wordWrap = 'break-word';
-                            popup.style.fontFamily = 'Arial, sans-serif';
-                            popup.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.5)';
-                            document.body.appendChild(popup);
-                            popupTimeout = setTimeout(() => {
-                                popup.remove();
-                            }, 600);
-
-                            popup.addEventListener('mouseover', () => {
-                                clearTimeout(popupTimeout);
+                            Object.assign(popup.style, {
+                                position: 'fixed', top: '10px', right: '10px',
+                                padding: '10px', backgroundColor: 'rgba(0, 0, 0, 0.4)',
+                                color: '#fff', borderRadius: '15px', zIndex: '10000',
+                                fontSize: '14px', maxWidth: '300px', wordWrap: 'break-word',
+                                fontFamily: 'Arial, sans-serif',
+                                boxShadow: '0 2px 10px rgba(0, 0, 0, 0.5)'
                             });
+                            document.body.appendChild(popup);
+                            popupTimeout = setTimeout(() => popup.remove(), 600);
+                            popup.addEventListener('mouseover', () => clearTimeout(popupTimeout));
                             popup.addEventListener('mouseout', () => {
-                                popupTimeout = setTimeout(() => {
-                                    popup.remove();
-                                }, 600);
+                                popupTimeout = setTimeout(() => popup.remove(), 600);
                             });
                         }
+
                         function createButton() {
                             const button = document.createElement('button');
                             button.innerText = 'S';
-                            button.style.position = 'fixed';
-                            button.style.top = '10px';
-                            button.style.right = '10px';
-                            button.style.zIndex = '9999';
-                            button.style.padding = '8px';
-                            button.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
-                            button.style.color = '#fff';
-                            button.style.border = 'none';
-                            button.style.borderRadius = '5px';
-                            button.style.cursor = 'pointer';
-                            button.style.opacity = '0';
-                            button.style.transition = 'opacity 0.5s ease';
-                            button.onclick = function () {
+                            Object.assign(button.style, {
+                                position: 'fixed', top: '10px', right: '10px', zIndex: '9999',
+                                padding: '8px', backgroundColor: 'rgba(0, 0, 0, 0.5)', color: '#fff',
+                                border: 'none', borderRadius: '5px', cursor: 'pointer',
+                                opacity: '0', transition: 'opacity 0.5s ease'
+                            });
+
+                            button.onclick = () => {
                                 if (answers.length > 0) {
                                     showPopup(answers.join('\n'));
                                 } else {
                                     showPopup('No answers found yet!!');
                                 }
                             };
-                            button.addEventListener('mouseover', () => {
-                                button.style.opacity = '1';
-                            });
-                            button.addEventListener('mouseout', () => {
-                                button.style.opacity = '0';
-                            });
+
+                            button.addEventListener('mouseover', () => button.style.opacity = '1');
+                            button.addEventListener('mouseout', () => button.style.opacity = '0');
                             document.body.appendChild(button);
                         }
+
                         const originalFetch = window.fetch;
                         window.fetch = function () {
                             return originalFetch.apply(this, arguments).then(async response => {
@@ -130,14 +145,15 @@
                                 return response;
                             });
                         };
+
                         const originalXHR = XMLHttpRequest.prototype.open;
                         XMLHttpRequest.prototype.open = function () {
                             this.addEventListener('load', function () {
                                 if (this.responseType === 'arraybuffer' && this.response) {
-                                    let decodedResponse = new TextDecoder('utf-8').decode(this.response);
+                                    let decoded = new TextDecoder('utf-8').decode(this.response);
                                     try {
-                                        const parsedData = JSON.parse(decodedResponse);
-                                        findCorrectAnswer(parsedData);
+                                        const parsed = JSON.parse(decoded);
+                                        findCorrectAnswer(parsed);
                                     } catch (e) { }
                                 } else if (this.responseType === '' || this.responseType === 'text') {
                                     try {
@@ -150,160 +166,12 @@
                             });
                             return originalXHR.apply(this, arguments);
                         };
+
                         createButton();
                     })();
                 }
-                async function geminilmaoo() {
-                    'use strict';
-
-
-                    async function getGeminiResponse(prompt) {
-                        const apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + apiKey;
-
-                        const body = {
-                            contents: [{
-                                parts: [{
-                                    text: prompt
-                                }]
-                            }]
-                        };
-
-                        return fetch(apiUrl, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify(body)
-                        })
-                            .then(response => {
-                                if (!response.ok) {
-                                    throw new Error(`HTTP error! Status: ${response.status}`);
-                                }
-                                return response.json();
-                            })
-                            .then(data => {
-                                const resultText = data.candidates[0].content.parts[0].text.trim();
-                                navigator.clipboard.writeText(resultText).catch(err => console.error("Clipboard error:", err));
-                                showCheckmark();
-                                return resultText;
-                            })
-                            .catch(error => {
-                                console.error("Error fetching from Gemini:", error);
-                                return "Error: Could not retrieve response from Gemini.";
-                            });
-                    }
-
-                    function showCheckmark() {
-                        const checkmark = document.createElement('div');
-                        checkmark.innerText = '✅';
-                        checkmark.style.position = 'fixed';
-                        checkmark.style.top = '45px';
-                        checkmark.style.right = '15px';
-                        checkmark.style.fontSize = '20px';
-                        checkmark.style.zIndex = '10002';
-                        checkmark.style.transition = 'opacity 0.5s ease';
-                        document.body.appendChild(checkmark);
-
-                        setTimeout(() => {
-                            checkmark.remove();
-                        }, 800);
-                    }
-
-                    function showPrompt() {
-                        const promptContainer = document.createElement('div');
-                        promptContainer.style.position = 'fixed';
-                        promptContainer.style.top = '55%';
-                        promptContainer.style.left = '40%';
-                        promptContainer.style.transform = 'translate(-50%, -50%)';
-                        promptContainer.style.backgroundColor = 'rgba(0, 0, 0, 0.1)';
-                        promptContainer.style.padding = '5px';
-                        promptContainer.style.borderRadius = '4px';
-                        promptContainer.style.boxShadow = '0 2px 6px rgba(0, 0, 0, 0.2)';
-                        promptContainer.style.zIndex = '10001';
-                        promptContainer.style.opacity = '0.8';
-                        promptContainer.style.transition = 'opacity 0.3s ease';
-                        promptContainer.style.width = '150px';
-
-                        const promptInput = document.createElement('input');
-                        promptInput.type = 'text';
-                        promptInput.placeholder = 'Type prompt here';
-                        promptInput.style.width = '100%';
-                        promptInput.style.padding = '5px';
-                        promptInput.style.borderRadius = '3px';
-                        promptInput.style.border = '1px solid rgba(0, 0, 0, 0.3)';
-                        promptInput.style.fontSize = '12px';
-                        promptInput.style.opacity = '0.9';
-
-                        promptContainer.appendChild(promptInput);
-                        document.body.appendChild(promptContainer);
-
-                        promptInput.focus();
-
-                        function removePrompt() {
-                            promptContainer.remove();
-                            document.removeEventListener('click', onOutsideClick);
-                        }
-
-                        function onOutsideClick(event) {
-                            if (!promptContainer.contains(event.target) && event.target !== promptInput) {
-                                removePrompt();
-                            }
-                        }
-
-                        setTimeout(() => {
-                            document.addEventListener('click', onOutsideClick);
-                        }, 10);
-
-                        promptInput.addEventListener('keydown', async function (event) {
-                            if (event.key === 'Enter') {
-                                const promptText = promptInput.value;
-                                removePrompt();
-                                await getGeminiResponse(promptText);
-                            } else if (event.key === 'Escape') {
-                                removePrompt();
-                            }
-                        });
-                    }
-
-                    function createButton() {
-                        const button = document.createElement('button');
-                        button.innerText = 'A';
-                        button.style.position = 'fixed';
-                        button.style.top = '10px';
-                        button.style.right = '10px';
-                        button.style.zIndex = '9999';
-                        button.style.padding = '8px';
-                        button.style.backgroundColor = 'rgba(0, 0, 0, 0.4)';
-                        button.style.color = '#fff';
-                        button.style.border = 'none';
-                        button.style.borderRadius = '50%';
-                        button.style.cursor = 'pointer';
-                        button.style.opacity = '0';
-                        button.style.transition = 'opacity 0.5s ease';
-
-                        button.addEventListener('mouseover', () => {
-                            button.style.opacity = '1';
-                        });
-
-                        button.addEventListener('mouseout', () => {
-                            button.style.opacity = '0';
-                        });
-
-                        button.onclick = showPrompt;
-
-                        document.body.appendChild(button);
-                    }
-
-                    async function init() {
-                        createButton();
-                    }
-
-                    await init();
-                }
-
 
                 await buttonlmaoo();
-                await geminilmaoo();
             }
         });
 
