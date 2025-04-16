@@ -16,6 +16,7 @@
         10037152, //Sisi
         10002839, //Mazika
         10002724, //Nizo
+        10034390, //Bassyo
     ];
     const originalLog = console.log;
 
