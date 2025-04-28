@@ -47,47 +47,52 @@
                         let answers = [];
                         let popupTimeout;
 
-                        function findCorrectAnswer(data) {
+                        async function findCorrectAnswer(data) {
                             if (Array.isArray(data)) {
-                                data.forEach(async (item, indexx) => {
+                                data.sort((a, b) => a.question - b.question);
+                                
+                                for (let indexx = 0; indexx < data.length; indexx++) {
+                                    const item = data[indexx];
                                     if (item.questions) {
                                         const questionType = item.questions.type;
                                         const questionNumber = item.question;
-
-                                        await fetch(`https://blb2024-o5xlbifnea-uc.a.run.app/questions/${questionNumber}`, {
-                                            method: "GET",
-                                            headers: {
-                                                "accept": "*/*",
-                                                "content-type": "application/json",
-                                                "origin": "https://student.nis-blb.com",
-                                                "referer": "https://student.nis-blb.com/",
-                                                "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IkFiZGVscmFobWFuIEFzaHJhZiBGYXJvdWsiLCJpZCI6MTAwMDAwMzcsInJvbGUiOiJzdHVkZW50IiwiY29ob3J0IjozOTIsImJ5X3N1YmplY3QiOm51bGwsImdyYWRlIjo5NSwiY2xhc3Nyb29tIjozMjYsImlhdCI6MTc0NDYxNzI4MSwiZXhwIjoxNzQ0NjE3MzQxfQ.RigkTycjWT_Ea-Gh9q-hH0M1zkr6ihbCvCaBJ9K_bwQ",
-                                                "type": "student"
-                                            }
-                                        })
-                                            .then(res => res.json())
-                                            .then(async (data) => {
-                                                const options = await data.questions_options || [];
-                                                const correctOption = await options.find(opt => opt.correct);
-
-                                                if (correctOption) {
-                                                    const optionLabels = ["A", "B", "C", "D", "E", "F", "G"];
-                                                    const index = await options.indexOf(correctOption);
-                                                    const label = await optionLabels[index] || await `Option ${index + 1}`;
-                                                    await answers.push(`${indexx + 1}. ${label} (${correctOption.title})`);
-                                                    await console.log(`Correct Answer: ${label}) ${correctOption.title}`);
-                                                } else {
-                                                    console.log("No correct option found.");
+                        
+                                        try {
+                                            const res = await fetch(`https://blb2024-o5xlbifnea-uc.a.run.app/questions/${questionNumber}`, {
+                                                method: "GET",
+                                                headers: {
+                                                    "accept": "*/*",
+                                                    "content-type": "application/json",
+                                                    "origin": "https://student.nis-blb.com",
+                                                    "referer": "https://student.nis-blb.com/",
+                                                    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IkFiZGVscmFobWFuIEFzaHJhZiBGYXJvdWsiLCJpZCI6MTAwMDAwMzcsInJvbGUiOiJzdHVkZW50IiwiY29ob3J0IjozOTIsImJ5X3N1YmplY3QiOm51bGwsImdyYWRlIjo5NSwiY2xhc3Jvb20iOjMyNiwiaWF0IjoxNzQ0NjE3MjgxLCJleHAiOjE3NDQ2MTczNDF9.RigkTycjWT_Ea-Gh9q-hH0M1zkr6ihbCvCaBJ9K_bwQ",
+                                                    "type": "student"
                                                 }
-                                            })
-                                            .catch(err => console.log(err));
-
+                                            });
+                                            const data = await res.json();
+                        
+                                            const options = data.questions_options || [];
+                                            const correctOption = options.find(opt => opt.correct);
+                        
+                                            if (correctOption) {
+                                                const optionLabels = ["A", "B", "C", "D", "E", "F", "G"];
+                                                const index = options.indexOf(correctOption);
+                                                const label = optionLabels[index] || `Option ${index + 1}`;
+                                                answers.push(`${indexx + 1}. ${label} (${correctOption.title})`);
+                                                console.log(`Correct Answer: ${label}) ${correctOption.title}`);
+                                            } else {
+                                                console.log("No correct option found.");
+                                            }
+                                        } catch (err) {
+                                            console.log(err);
+                                        }
+                        
                                         if (questionType === "True/False" && item.answer) {
                                             const tfAnswer = item.questions.answer === "Right" ? "✅" : "❌";
-                                            await console.log(`${index + 1}. - ${tfAnswer}`);
+                                            console.log(`${indexx + 1}. - ${tfAnswer}`);
                                         }
                                     }
-                                });
+                                }
                             }
                         }
 
