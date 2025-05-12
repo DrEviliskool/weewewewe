@@ -127,7 +127,7 @@
 
                             button.onclick = async () => {
                                 if (answers.length > 0) {
-                                    await showPopup(answers.join('\n'));
+                                    showPopup(answers.sort((a, b) => a.split('.')[0] - b.split('.')[0]).join('\n'));
                                 } else {
                                     await showPopup('No answers found yet!!');
                                 }
