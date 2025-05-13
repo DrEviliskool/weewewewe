@@ -1,7 +1,6 @@
 (function () {
     'use strict';
 
-    const apiKey = 'AIzaSyAw68RiUXrzIxYEOb_YQZFi75CbDa_mKkg';
     const savedId = [
         10000037, //ana
         10002324, //dmg
@@ -50,13 +49,13 @@
                         async function findCorrectAnswer(data) {
                             if (Array.isArray(data)) {
                                 data.sort((a, b) => a.question - b.question);
-                                
+
                                 for (let indexx = 0; indexx < data.length; indexx++) {
                                     const item = data[indexx];
                                     if (item.questions) {
                                         const questionType = item.questions.type;
                                         const questionNumber = item.question;
-                        
+
                                         try {
                                             const res = await fetch(`https://blb2024-o5xlbifnea-uc.a.run.app/questions/${questionNumber}`, {
                                                 method: "GET",
@@ -70,10 +69,10 @@
                                                 }
                                             });
                                             const data = await res.json();
-                        
+
                                             const options = data.questions_options || [];
                                             const correctOption = options.find(opt => opt.correct);
-                        
+
                                             if (correctOption) {
                                                 const optionLabels = ["A", "B", "C", "D", "E", "F", "G"];
                                                 const index = options.indexOf(correctOption);
@@ -86,7 +85,7 @@
                                         } catch (err) {
                                             console.log(err);
                                         }
-                        
+
                                         if (questionType === "True/False" && item.answer) {
                                             const tfAnswer = item.questions.answer === "Right" ? "✅" : "❌";
                                             console.log(`${indexx + 1}. - ${tfAnswer}`);
@@ -99,42 +98,104 @@
                         function showPopup(content) {
                             const popup = document.createElement('div');
                             popup.innerText = content;
-                            Object.assign(popup.style, {
-                                position: 'fixed', top: '10px', right: '10px',
-                                padding: '10px', backgroundColor: 'rgba(0, 0, 0, 0.4)',
-                                color: '#fff', borderRadius: '15px', zIndex: '10000',
-                                fontSize: '14px', maxWidth: '300px', wordWrap: 'break-word',
-                                fontFamily: 'Arial, sans-serif',
-                                boxShadow: '0 2px 10px rgba(0, 0, 0, 0.5)'
-                            });
+                            popup.style.position = 'fixed';
+                            popup.style.bottom = '10px';
+                            popup.style.right = '10px';
+                            popup.style.padding = '10px';
+                            popup.style.backgroundColor = 'rgba(0, 0, 0, 0.4)';
+                            popup.style.color = '#fff';
+                            popup.style.borderRadius = '15px';
+                            popup.style.zIndex = '10000';
+                            popup.style.fontSize = '14px';
+                            popup.style.maxWidth = '300px';
+                            popup.style.wordWrap = 'break-word';
+                            popup.style.fontFamily = 'Arial, sans-serif';
+                            popup.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.5)';
                             document.body.appendChild(popup);
-                            popupTimeout = setTimeout(() => popup.remove(), 600);
-                            popup.addEventListener('mouseover', () => clearTimeout(popupTimeout));
+
+                            popupTimeout = setTimeout(() => {
+                                popup.remove();
+                            }, 600);
+
+                            popup.addEventListener('mouseover', () => {
+                                clearTimeout(popupTimeout);
+                            });
+
                             popup.addEventListener('mouseout', () => {
-                                popupTimeout = setTimeout(() => popup.remove(), 600);
+                                popupTimeout = setTimeout(() => {
+                                    popup.remove();
+                                }, 600);
                             });
                         }
 
-                        async function createButton() {
+                        function createButton() {
                             const button = document.createElement('button');
                             button.innerText = 'S';
-                            Object.assign(button.style, {
-                                position: 'fixed', top: '10px', right: '10px', zIndex: '9999',
-                                padding: '8px', backgroundColor: 'rgba(0, 0, 0, 0.5)', color: '#fff',
-                                border: 'none', borderRadius: '5px', cursor: 'pointer',
-                                opacity: '0', transition: 'opacity 0.5s ease'
-                            });
+                            button.style.position = 'fixed';
+                            button.style.bottom = '10px';
+                            button.style.right = '10px';
+                            button.style.zIndex = '9999';
+                            button.style.padding = '8px';
+                            button.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+                            button.style.color = '#fff';
+                            button.style.border = 'none';
+                            button.style.borderRadius = '5px';
+                            button.style.cursor = 'pointer';
+                            button.style.opacity = '0';
+                            button.style.transition = 'opacity 0.5s ease';
 
-                            button.onclick = async () => {
+                            button.onclick = function () {
                                 if (answers.length > 0) {
                                     showPopup(answers.sort((a, b) => a.split('.')[0] - b.split('.')[0]).join('\n'));
                                 } else {
-                                    await showPopup('No answers found yet!!');
+                                    showPopup('No answers found yett.');
                                 }
                             };
 
-                            button.addEventListener('mouseover', () => button.style.opacity = '1');
-                            button.addEventListener('mouseout', () => button.style.opacity = '0');
+                            button.addEventListener('mouseover', () => {
+                                button.style.opacity = '1';
+                            });
+
+                            button.addEventListener('mouseout', () => {
+                                button.style.opacity = '0';
+                            });
+
+                            document.body.appendChild(button);
+                        }
+
+                        function createButtonol() {
+                            const button = document.createElement('button');
+                            button.innerText = 'Clear';
+                            button.style.position = 'fixed';
+                            button.style.bottom = '35px';
+                            button.style.right = '10px';
+                            button.style.zIndex = '9999';
+                            button.style.padding = '8px';
+                            button.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+                            button.style.color = '#fff';
+                            button.style.border = 'none';
+                            button.style.borderRadius = '5px';
+                            button.style.cursor = 'pointer';
+                            button.style.opacity = '0';
+                            button.style.transition = 'opacity 0.5s ease';
+
+                            button.onclick = function () {
+                                if (answers.length > 0) {
+                                    answers.length = 0
+                                    showPopup('Cleared the answers')
+                                } else {
+                                    showPopup('No answers found yet to clear.');
+                                }
+                            };
+
+                            button.addEventListener('mouseover', () => {
+                                button.style.opacity = '1';
+                            });
+
+                            button.addEventListener('mouseout', () => {
+                                button.style.opacity = '0';
+                            });
+
                             document.body.appendChild(button);
                         }
 
@@ -172,6 +233,7 @@
                         };
 
                         createButton();
+                        createButtonol()
                     })();
                 }
 
