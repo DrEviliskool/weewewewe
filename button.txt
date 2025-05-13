@@ -99,7 +99,7 @@
                             const popup = document.createElement('div');
                             popup.innerText = content;
                             popup.style.position = 'fixed';
-                            popup.style.bottom = '10px';
+                            popup.style.top = '10px';
                             popup.style.right = '10px';
                             popup.style.padding = '10px';
                             popup.style.backgroundColor = 'rgba(0, 0, 0, 0.4)';
@@ -132,7 +132,7 @@
                             const button = document.createElement('button');
                             button.innerText = 'S';
                             button.style.position = 'fixed';
-                            button.style.bottom = '10px';
+                            button.style.top = '10px';
                             button.style.right = '10px';
                             button.style.zIndex = '9999';
                             button.style.padding = '8px';
@@ -167,7 +167,7 @@
                             const button = document.createElement('button');
                             button.innerText = 'Clear';
                             button.style.position = 'fixed';
-                            button.style.bottom = '35px';
+                            button.style.top = '35px';
                             button.style.right = '10px';
                             button.style.zIndex = '9999';
                             button.style.padding = '8px';
