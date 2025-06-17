@@ -16,6 +16,7 @@
         10002839, //Mazika
         10002724, //Nizo
         10034390, //Bassyo
+        10034294, //eyad
     ];
     const originalLog = console.log;
 
