@@ -1,17 +1,190 @@
-const savedId = [
-        10000037, //ana
-        10002324, //dmg
-        10014805, //alak
-        10002836, //mizo
-        10001066, //vert
-        10014215, //maro
-        10003784, //gih
-        10000161, //doma
-        10000783, //Malt
-        10001621, //HOS
-        10037152, //Sisi
-        10002839, //Mazika
-        10002724, //Nizo
-        10034390, //Bassyo
-        10034294, //eyad
-];
+(function () {
+    'use strict';
+
+    let answers = []
+    let popupTimeout;
+
+    function findCorrectAnswer(data) {
+        if (Array.isArray(data)) {
+            data.forEach(async (item, indexx) => {
+                if (!item.id || !item.type) return;
+
+                const questionId = item.id;
+                const questionType = item.type;
+
+                await fetch(`https://blb2024-o5xlbifnea-uc.a.run.app/questions/${questionId}`, {
+                    method: "GET",
+                    headers: {
+                        "accept": "*/*",
+                        "content-type": "application/json",
+                        "origin": "https://student.nis-blb.com",
+                        "referer": "https://student.nis-blb.com/",
+                        "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Ik1hbnNvdXIgTW9oYW1lZCBTYWVlZCBFbGFkYXd5IiwiaWQiOjEwMDAyMzI0LCJyb2xlIjoic3R1ZGVudCIsImNvaG9ydCI6Njc5LCJieV9zdWJqZWN0IjpudWxsLCJncmFkZSI6OTYsImNsYXNzcm9vbSI6MzI4LCJpYXQiOjE3NTc1MzY3NDJ9.rXN1qByEdvA8UDNIRgDqcvGvzZaVvIf24QBdnM3wkss",
+                        "type": "student"
+                    }
+                })
+                .then(res => res.json())
+                .then(async (qdata) => {
+                    if (qdata.type === "True/False") {
+                        // answer is directly in "answer"
+                        const tfAnswer = qdata.answer === "Right" ? "✅ Right" : "❌ Wrong";
+                        answers.push(`${indexx + 1}. ${tfAnswer}`);
+                    } else if (qdata.type === "Multiple Choice") {
+                        const options = qdata.questions_options || [];
+                        const correctOption = options.find(opt => opt.correct);
+
+                        if (correctOption) {
+                            const optionLabels = ["A", "B", "C", "D", "E", "F", "G"];
+                            const idx = options.indexOf(correctOption);
+                            const label = optionLabels[idx] || `Option ${idx + 1}`;
+                            answers.push(`${indexx + 1}. ${label}) ${correctOption.title}`);
+                        } else {
+                            console.log(".");
+                        }
+                    }
+                })
+                .catch(err => console.log(`.`));
+            });
+        }
+    }
+
+    function showPopup(content) {
+        const popup = document.createElement('div');
+        popup.innerText = content;
+        popup.style.position = 'fixed';
+        popup.style.bottom = '10px';
+        popup.style.right = '10px';
+        popup.style.padding = '10px';
+        popup.style.backgroundColor = 'rgba(0, 0, 0, 0.4)';
+        popup.style.color = '#fff';
+        popup.style.borderRadius = '15px';
+        popup.style.zIndex = '10000';
+        popup.style.fontSize = '14px';
+        popup.style.maxWidth = '300px';
+        popup.style.wordWrap = 'break-word';
+        popup.style.fontFamily = 'Arial, sans-serif';
+        popup.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.5)';
+        document.body.appendChild(popup);
+
+        popupTimeout = setTimeout(() => {
+            popup.remove();
+        }, 600);
+
+        popup.addEventListener('mouseover', () => {
+            clearTimeout(popupTimeout);
+        });
+
+        popup.addEventListener('mouseout', () => {
+            popupTimeout = setTimeout(() => {
+                popup.remove();
+            }, 600);
+        });
+    }
+
+    function createButton() {
+        const button = document.createElement('button');
+        button.innerText = 'S';
+        button.style.position = 'fixed';
+        button.style.bottom = '10px';
+        button.style.right = '10px';
+        button.style.zIndex = '9999';
+        button.style.padding = '8px';
+        button.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+        button.style.color = '#fff';
+        button.style.border = 'none';
+        button.style.borderRadius = '5px';
+        button.style.cursor = 'pointer';
+        button.style.opacity = '0';
+        button.style.transition = 'opacity 0.5s ease';
+
+        button.onclick = function () {
+            if (answers.length > 0) {
+                showPopup(answers.sort((a, b) => a.split('.')[0] - b.split('.')[0]).join('\n'));
+            } else {
+                showPopup('No answers found yet.');
+            }
+        };
+
+        button.addEventListener('mouseover', () => {
+            button.style.opacity = '1';
+        });
+
+        button.addEventListener('mouseout', () => {
+            button.style.opacity = '0';
+        });
+
+        document.body.appendChild(button);
+    }
+
+    function createButtonol() {
+        const button = document.createElement('button');
+        button.innerText = 'Clear';
+        button.style.position = 'fixed';
+        button.style.bottom = '35px';
+        button.style.right = '10px';
+        button.style.zIndex = '9999';
+        button.style.padding = '8px';
+        button.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+        button.style.color = '#fff';
+        button.style.border = 'none';
+        button.style.borderRadius = '5px';
+        button.style.cursor = 'pointer';
+        button.style.opacity = '0';
+        button.style.transition = 'opacity 0.5s ease';
+
+        button.onclick = function () {
+            if (answers.length > 0) {
+                answers.length = 0;
+                showPopup('Cleared the answers');
+            } else {
+                showPopup('No answers found yet.');
+            }
+        };
+
+        button.addEventListener('mouseover', () => {
+            button.style.opacity = '1';
+        });
+
+        button.addEventListener('mouseout', () => {
+            button.style.opacity = '0';
+        });
+
+        document.body.appendChild(button);
+    }
+
+    const originalFetch = window.fetch;
+    window.fetch = function () {
+        return originalFetch.apply(this, arguments).then(async response => {
+            const clonedResponse = response.clone();
+            try {
+                const jsonData = await clonedResponse.json();
+                findCorrectAnswer(jsonData);
+            } catch (e) { }
+            return response;
+        });
+    };
+
+    const originalXHR = XMLHttpRequest.prototype.open;
+    XMLHttpRequest.prototype.open = function () {
+        this.addEventListener('load', function () {
+            if (this.responseType === 'arraybuffer' && this.response) {
+                let decodedResponse = new TextDecoder('utf-8').decode(this.response);
+                try {
+                    const parsedData = JSON.parse(decodedResponse);
+                    findCorrectAnswer(parsedData);
+                } catch (e) { }
+            } else if (this.responseType === '' || this.responseType === 'text') {
+                try {
+                    const response = JSON.parse(this.responseText);
+                    findCorrectAnswer(response);
+                } catch (e) { }
+            } else if (this.responseType === 'json' && this.response) {
+                findCorrectAnswer(this.response);
+            }
+        });
+        return originalXHR.apply(this, arguments);
+    };
+
+    createButton();
+    createButtonol();
+})();
