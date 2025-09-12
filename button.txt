@@ -3,17 +3,10 @@
 
     const savedId = [
         10000037, //ana
-        10002324, //dmg
         10014805, //alak
-        10002836, //mizo
         10001066, //vert
-        10014215, //maro
-        10003784, //gih
         10000161, //doma
         10000783, //Malt
-        10001621, //HOS
-        10037152, //Sisi
-        10002839, //Mazika
     ];
 
     const originalLog = console.log;
