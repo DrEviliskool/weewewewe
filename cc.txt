@@ -1,128 +1,317 @@
-(async function () {
+(function () {
     'use strict';
 
-    const waitForFirebase = () => new Promise(resolve => {
-        if (window.firebase) return resolve();
-        const interval = setInterval(() => {
-            if (window.firebase) { clearInterval(interval); resolve(); }
-        }, 50);
+    const firebaseConfig = { apiKey: "AIzaSyCzfEgRutixv74_ydXBJmu8ImLNDcduoVk", authDomain: "hehehaha-dda0e.firebaseapp.com", databaseURL: "https://hehehaha-dda0e-default-rtdb.firebaseio.com", projectId: "hehehaha-dda0e", storageBucket: "hehehaha-dda0e.firebasestorage.app", messagingSenderId: "475557136805", appId: "1:475557136805:web:463e7fcb0ad8d51f69004c", measurementId: "G-PTF35KXD5C" };
+
+    let currentUserId = null;
+    let firebaseReady = false;
+    let dbInstance = null;
+    let authInstance = null;
+
+    function loadScript(url, callback) {
+        GM_xmlhttpRequest({
+            method: "GET",
+            url: url,
+            onload: function(response) {
+                try {
+                    eval(response.responseText);
+                    if (callback) callback();
+                } catch (e) {
+                    console.error(`Failed to evaluate script from ${url}:`, e);
+                }
+            },
+            onerror: function(response) {
+                console.error(`Failed to load script from ${url}:`, response);
+            }
+        });
+    }
+
+    loadScript("https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js", () => {
+        loadScript("https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js", () => {
+            loadScript("https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js", () => {
+                firebase.initializeApp(firebaseConfig);
+                dbInstance = firebase.database();
+                authInstance = firebase.auth();
+
+                authInstance.signInAnonymously()
+                    .then((userCredential) => {
+                        currentUserId = userCredential.user.uid;
+                        console.log('Firebase user authenticated:', currentUserId);
+                        firebaseReady = true;
+                        initializeUserScriptFeatures();
+                    })
+                    .catch((error) => {
+                        console.error('Firebase authentication error:', error);
+                        showNotification(`Authentication error: ${error.message || error.code}`, 5000);
+                    });
+            });
+        });
     });
 
-    const savedId = [10000037, 10014805, 10001066, 10000161, 10000783, 10002839, 10003870];
+    let mainPopupTimeout;
+    let notificationPopupTimeout;
 
-    const originalLog = console.log;
-    console.log = function (...args) {
-        originalLog.apply(console, args);
-        const isTriggered = savedId.some(id => String(args[0]).startsWith(id));
-
-        if (isTriggered && !window.scriptHasBeenInitialized) {
-            window.scriptHasBeenInitialized = true;
-            console.log('[SZcript Controller] Verified ID detected. Initializing live control module.');
-            activateRealtimeController();
+    function showPopup(content, permanent = false) {
+        const existingMainPopup = document.getElementById('main-answers-popup');
+        if (existingMainPopup) {
+            existingMainPopup.remove();
+            clearTimeout(mainPopupTimeout);
         }
-    };
 
-    async function activateRealtimeController() {
-        await waitForFirebase();
-
-        const customAlert = document.createElement('div');
-        customAlert.textContent = 'Access successful. Connecting to control server...';
-        Object.assign(customAlert.style, {
-            position: 'fixed', top: '20px', left: '50%', transform: 'translateX(-50%)', backgroundColor: '#2ecc71', color: '#fff',
-            padding: '10px 20px', borderRadius: '5px', boxShadow: '0 2px 5px rgba(0,0,0,0.2)', zIndex: '99999'
+        const popup = document.createElement('div');
+        popup.id = 'main-answers-popup';
+        popup.innerText = content;
+        Object.assign(popup.style, {
+            position: 'fixed', bottom: '10px', right: '10px', padding: '10px',
+            backgroundColor: 'rgba(0, 0, 0, 0.7)', color: '#fff', borderRadius: '15px',
+            zIndex: '10000', fontSize: '14px', maxWidth: '300px', wordWrap: 'break-word',
+            fontFamily: 'Arial, sans-serif', boxShadow: '0 2px 10px rgba(0, 0, 0, 0.5)',
+            transition: 'opacity 0.3s ease-in-out'
         });
-        document.body.appendChild(customAlert);
-        setTimeout(() => customAlert.remove(), 2500);
+        document.body.appendChild(popup);
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyCzfEgRutixv74_ydXBJmu8ImLNDcduoVk",
-            authDomain: "hehehaha-dda0e.firebaseapp.com",
-            databaseURL: "https://hehehaha-dda0e-default-rtdb.firebaseio.com",
-            projectId: "hehehaha-dda0e",
-            storageBucket: "hehehaha-dda0e.appspot.com",
-            messagingSenderId: "475557136805",
-            appId: "1:475557136805:web:463e7fcb0ad8d51f69004c"
-        };
-        
-        // --- THIS IS THE FIX ---
-        // Only initialize Firebase if it hasn't been initialized already.
-        // This prevents the script from crashing on subsequent page navigations.
-        if (!firebase.apps.length) {
-            try {
-                firebase.initializeApp(firebaseConfig);
-            } catch (e) {
-                console.error("Firebase initialization error:", e);
-                return; // Stop if initialization fails
-            }
-        }
-        
-        const db = firebase.database();
-        let scriptEnabled = false;
-        let currentMode = 'real';
-        let customAnswers = ['...'];
+        if (!permanent) {
+            mainPopupTimeout = setTimeout(() => {
+                popup.style.opacity = '0';
+                setTimeout(() => popup.remove(), 300);
+            }, 900);
 
-        function getUserId() {
-            let userId = GM_getValue('scriptUserId');
-            if (!userId) {
-                userId = 'user-' + Math.random().toString(36).substr(2, 9);
-                GM_setValue('scriptUserId', userId);
-            }
-            return userId;
-        }
-        const myUserId = getUserId();
-        console.log(`[Script Controller] Your ID is: ${myUserId}. Share this with the admin.`);
-
-        const userRef = db.ref('users/' + myUserId);
-        userRef.on('value', (snapshot) => {
-            const userData = snapshot.val();
-            if (userData) {
-                scriptEnabled = userData.enabled === true;
-                currentMode = userData.mode || 'real';
-                customAnswers = (userData.customAnswers && Array.isArray(userData.customAnswers)) ? userData.customAnswers : ['No custom answers set.'];
-            } else {
-                userRef.set({ nickname: 'New User ' + myUserId.substring(5, 9), enabled: true, mode: 'real', customAnswers: ['Welcome!'] });
-            }
-        });
-
-        // The UI and Interceptors are now defined and called from within this secure scope
-        let answers = [];
-        let popupTimeout;
-        const apiToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Ik1hbnNvdXIgTW9oYW1lZCBTYWVlZCBFbGFkYXd5IiwiaWQiOjEwMDAyMzI0LCJyb2xlIjoic3R1ZGVudCIsImNvaG9ydCI6Njc5LCJieV9zdWJqZWN0IjpudWxsLCJncmFkZSI6OTYsImNsYXNzcm9vbSI6MzI4LCJpYXQiOjE3NTc1MzY3NDJ9.rXN1qByEdvA8UDNIRgDqcvGvzZaVvIf24QBdnM3wkss";
-
-        function showPopup(content) {
-            if (popupTimeout) clearTimeout(popupTimeout);
-            let existingPopup = document.getElementById('answer-popup');
-            if (existingPopup) existingPopup.remove();
-            const popup = document.createElement('div');
-            popup.id = 'answer-popup';
-            popup.innerText = content;
-            Object.assign(popup.style, {
-                position: 'fixed', bottom: '10px', right: '10px', padding: '10px', backgroundColor: 'rgba(0, 0, 0, 0.6)',
-                backdropFilter: 'blur(5px)', color: '#fff', borderRadius: '15px', zIndex: '10000', fontSize: '14px',
-                maxWidth: '300px', wordWrap: 'break-word', fontFamily: 'Arial, sans-serif',
-                boxShadow: '0 2px 10px rgba(0,0,0,0.5)', border: '1px solid rgba(255, 255, 255, 0.1)'
+            popup.addEventListener('mouseover', () => {
+                clearTimeout(mainPopupTimeout);
+                popup.style.opacity = '1';
             });
-            document.body.appendChild(popup);
-            popupTimeout = setTimeout(() => { popup.remove(); }, 4000);
-            popup.addEventListener('mouseover', () => clearTimeout(popupTimeout));
-            popup.addEventListener('mouseout', () => popupTimeout = setTimeout(() => popup.remove(), 600));
+            popup.addEventListener('mouseout', () => {
+                mainPopupTimeout = setTimeout(() => {
+                    popup.style.opacity = '0';
+                    setTimeout(() => popup.remove(), 300);
+                }, 900);
+            });
+        }
+    }
+
+    function showNotification(message, duration = 2000) {
+        const existingNotification = document.getElementById('notification-popup');
+        if (existingNotification) {
+            existingNotification.remove();
+            clearTimeout(notificationPopupTimeout);
         }
 
-        function createSButton() {
+        const popup = document.createElement('div');
+        popup.id = 'notification-popup';
+        popup.innerText = message;
+        Object.assign(popup.style, {
+            position: 'fixed', top: '20px', left: '50%',
+            transform: 'translateX(-50%)', backgroundColor: '#4CAF50',
+            color: 'white', padding: '8px 15px', borderRadius: '5px',
+            boxShadow: '0 2px 5px rgba(0, 0, 0, 0.2)', zIndex: '10001',
+            opacity: '0.9', transition: 'opacity 0.3s ease-in-out'
+        });
+        document.body.appendChild(popup);
+
+        notificationPopupTimeout = setTimeout(() => {
+            popup.style.opacity = '0';
+            setTimeout(() => popup.remove(), 300);
+        }, duration);
+    }
+
+    function initializeUserScriptFeatures() {
+        const savedId = [
+            10000037,
+            10014805,
+            10001066,
+            10000161,
+            10000783,
+            10002839,
+            10003870,
+        ];
+
+        async function loadAnswersFromFirebase() {
+            if (!firebaseReady || !currentUserId || !dbInstance) {
+                showNotification('Firebase not ready or user not authenticated yet. Cannot load.', 3000);
+                return;
+            }
+
+            const userAnswersRef = dbInstance.ref(`users/${currentUserId}/answers`);
+            try {
+                const snapshot = await userAnswersRef.once('value');
+                const savedAnswersObject = snapshot.val();
+
+                let answersToDisplay = [];
+                if (savedAnswersObject) {
+                    answersToDisplay = Object.values(savedAnswersObject).sort((a, b) => {
+                        const numA = parseInt(a.split('.')[0]);
+                        const numB = parseInt(b.split('.')[0]);
+                        return numA - numB;
+                    });
+                }
+
+                if (answersToDisplay.length > 0) {
+                    showPopup(answersToDisplay.join('\n'), false);
+                } else {
+                    showPopup('No saved answers found for this user in the database.', false);
+                }
+            } catch (error) {
+                console.error('Error loading answers from Firebase:', error);
+                showNotification('Failed to load answers from Firebase.');
+            }
+        }
+
+        async function clearAnswersInFirebase() {
+            if (!firebaseReady || !currentUserId || !dbInstance) {
+                showNotification('Firebase not ready or user not authenticated yet. Cannot clear.', 3000);
+                return;
+            }
+
+            const userAnswersRef = dbInstance.ref(`users/${currentUserId}/answers`);
+            try {
+                await userAnswersRef.remove();
+                const existingMainPopup = document.getElementById('main-answers-popup');
+                if(existingMainPopup) existingMainPopup.remove();
+                showNotification('All saved answers cleared from database!', 1000);
+            } catch (error) {
+                console.error('Error clearing answers from Firebase:', error);
+                showNotification('Failed to clear answers from database.');
+            }
+        }
+
+        function processReceivedData(data) {
+            if (!currentUserId || !dbInstance) {
+                console.warn('Firebase user not authenticated or DB not initialized. Cannot save new answers.');
+                return;
+            }
+
+            if (!Array.isArray(data)) {
+                console.warn('processReceivedData received non-array data:', data);
+                return;
+            }
+
+            data.forEach((item, indexx) => {
+                if (!item.id || !item.type || !['Multiple Choice', 'True/False'].includes(item.type)) {
+                    console.warn(`Skipping item due to invalid structure or type:`, item);
+                    return;
+                }
+
+                const questionId = item.id;
+
+                GM_xmlhttpRequest({
+                    method: "GET",
+                    url: `https://blb2024-o5xlbifnea-uc.a.run.app/questions/${questionId}`,
+                        headers: {
+                            "accept": "*/*",
+                            "content-type": "application/json",
+                            "origin": "https://student.nis-blb.com",
+                            "referer": "https://student.nis-blb.com/",
+                            "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Ik1hbnNvdXIgTW9oYW1lZCBTYWVlZCBFbGFkYXd5IiwiaWQiOjEwMDAyMzI0LCJyb2xlIjoic3R1ZGVudCIsImNvaG9ydCI6Njc5LCJieV9zdWJqZWN0IjpudWxsLCJncmFkZSI6OTYsImLsYXNzcm9vbSI6MzI4LCJpYXQiOjE3NTc1MzY3NDJ9.rXN1qByEdvA8UDNIRgDqcvGvzZaVvIf24QBdnM3wkss",
+                            "type": "student"
+                        },
+                    onload: function(response) {
+                        if (response.status !== 200) {
+                            console.error(`API request for question ${questionId} failed! Status: ${response.status}, Response: ${response.responseText}`);
+                            return;
+                        }
+
+                        try {
+                            const qdata = JSON.parse(response.responseText);
+
+                            if (qdata === null) {
+                                console.warn(`API returned 'null' for question ${questionId}. Skipping.`);
+                                return;
+                            }
+                            if (typeof qdata !== 'object' || qdata === null || typeof qdata.type === 'undefined') {
+                                console.error(`Received invalid data or missing 'type' property for question ${questionId}:`, qdata, "Raw response:", response.responseText);
+                                return;
+                            }
+
+                            let answerString = '';
+                            if (qdata.type === "True/False") {
+                                answerString = qdata.answer === "Right" ? "✅ Right" : "❌ Wrong";
+                            } else if (qdata.type === "Multiple Choice") {
+                                const options = qdata.questions_options || [];
+                                const correctOption = options.find(opt => opt.correct);
+
+                                if (correctOption) {
+                                    const optionLabels = ["A", "B", "C", "D", "E", "F", "G"];
+                                    const idx = options.indexOf(correctOption);
+                                    const label = optionLabels[idx] || `Option ${idx + 1}`;
+                                    answerString = `${label}) ${correctOption.title}`;
+                                } else {
+                                    console.warn(`No correct option found for Multiple Choice question ${questionId}.`);
+                                    answerString = "No correct option found.";
+                                }
+                            } else {
+                                console.warn(`Unknown question type received: '${qdata.type}' for questionId: ${questionId}`, qdata);
+                                answerString = `Unknown type: ${qdata.type}`;
+                            }
+
+                            if (answerString) {
+                                const answerFormattedForDB = `${indexx + 1}. ${answerString}`;
+                                dbInstance.ref(`users/${currentUserId}/answers/${questionId}`).set(answerFormattedForDB)
+                                    .catch(error => {
+                                        console.error(`Error saving answer for Q${questionId} to Firebase:`, error);
+                                        showNotification(`Failed to save Q${indexx + 1}!`, 2000);
+                                    });
+                            }
+
+                        } catch (err) {
+                            console.error(`Error processing question ${questionId}:`, err, "Raw response:", response.responseText);
+                        }
+                    },
+                    onerror: function(err) {
+                        console.error(`Network error fetching question ${questionId}:`, err);
+                    }
+                });
+            });
+        }
+
+        const originalConsoleLog = console.log;
+
+        try {
+            window.console = new Proxy(console, {
+                get(target, prop, receiver) {
+                    if (prop === 'log') {
+                        return function(...args) {
+                            args.forEach(async (arg) => {
+                                const argStr = String(arg);
+                                if (savedId.some(id => argStr.startsWith(id))) {
+                                    const customAlert = document.createElement('div');
+                                    customAlert.textContent = 'Access successful';
+                                    Object.assign(customAlert.style, {
+                                        position: 'fixed', top: '20px', left: '50%',
+                                        transform: 'translateX(-50%)', backgroundColor: '#333',
+                                        color: '#fff', padding: '10px 20px', borderRadius: '5px',
+                                        boxShadow: '0 2px 5px rgba(0, 0, 0, 0.2)', zIndex: '9999'
+                                    });
+                                    document.body.appendChild(customAlert);
+                                    setTimeout(() => {
+                                        document.body.removeChild(customAlert);
+                                    }, 680);
+                                }
+                            });
+                            Reflect.apply(originalConsoleLog, target, args);
+                        };
+                    }
+                    return Reflect.get(target, prop, receiver);
+                }
+            });
+        } catch (e) {
+            console.warn("Could not proxy console object. Console log interception might not work.", e);
+        }
+
+        function createSaveButton() {
             const button = document.createElement('button');
             button.innerText = 'S';
             Object.assign(button.style, {
                 position: 'fixed', bottom: '10px', right: '10px', zIndex: '9999', padding: '8px',
-                backgroundColor: 'rgba(0, 0, 0, 0.5)', color: '#fff', border: 'none', borderRadius: '5px',
-                cursor: 'pointer', opacity: '0.2', transition: 'opacity 0.3s ease'
+                backgroundColor: 'rgba(0, 0, 0, 0.5)', color: '#fff', border: 'none',
+                borderRadius: '5px', cursor: 'pointer', opacity: '0', transition: 'opacity 0.5s ease'
             });
+
             button.onclick = function () {
-                if (!scriptEnabled) return showPopup('Script is disabled by admin.');
-                if (currentMode === 'custom') return showPopup(customAnswers.join('\n'));
-                if (currentMode === 'real') return showPopup(answers.length > 0 ? answers.sort((a, b) => parseInt(a) - parseInt(b)).join('\n') : 'No answers found yet.');
+                loadAnswersFromFirebase();
             };
-            button.addEventListener('mouseover', () => button.style.opacity = '1');
-            button.addEventListener('mouseout', () => button.style.opacity = '0.2');
+
+            button.addEventListener('mouseover', () => { button.style.opacity = '1'; });
+            button.addEventListener('mouseout', () => { button.style.opacity = '0'; });
             document.body.appendChild(button);
         }
 
@@ -131,24 +320,80 @@
             button.innerText = 'Clear';
             Object.assign(button.style, {
                 position: 'fixed', bottom: '45px', right: '10px', zIndex: '9999', padding: '8px',
-                backgroundColor: 'rgba(0, 0, 0, 0.5)', color: '#fff', border: 'none', borderRadius: '5px',
-                cursor: 'pointer', opacity: '0.2', transition: 'opacity 0.3s ease'
+                backgroundColor: 'rgba(0, 0, 0, 0.5)', color: '#fff', border: 'none',
+                borderRadius: '5px', cursor: 'pointer', opacity: '0', transition: 'opacity 0.5s ease'
             });
+
             button.onclick = function () {
-                if (answers.length > 0) {
-                    answers.length = 0;
-                    showPopup('Cleared the answers');
-                } else {
-                    showPopup('No answers found yet.');
-                }
+                clearAnswersInFirebase();
             };
-            button.addEventListener('mouseover', () => button.style.opacity = '1');
-            button.addEventListener('mouseout', () => button.style.opacity = '0.2');
+
+            button.addEventListener('mouseover', () => { button.style.opacity = '1'; });
+            button.addEventListener('mouseout', () => { button.style.opacity = '0'; });
             document.body.appendChild(button);
         }
 
-        // Now that everything is safely initialized, create the UI.
-        createSButton();
+        function createLoadButton() {
+            const button = document.createElement('button');
+            button.innerText = 'Load';
+            Object.assign(button.style, {
+                position: 'fixed', bottom: '80px', right: '10px', zIndex: '9999', padding: '8px',
+                backgroundColor: 'rgba(0, 0, 0, 0.5)', color: '#fff', border: 'none',
+                borderRadius: '5px', cursor: 'pointer', opacity: '0', transition: 'opacity 0.5s ease'
+            });
+
+            button.onclick = function () {
+                loadAnswersFromFirebase();
+            };
+
+            button.addEventListener('mouseover', () => { button.style.opacity = '1'; });
+            button.addEventListener('mouseout', () => { button.style.opacity = '0'; });
+            document.body.appendChild(button);
+        }
+
+        const originalFetch = window.fetch;
+        window.fetch = function () {
+            return originalFetch.apply(this, arguments).then(async response => {
+                const clonedResponse = response.clone();
+                try {
+                    const jsonData = await clonedResponse.json();
+                    if (Array.isArray(jsonData)) {
+                         processReceivedData(jsonData);
+                    }
+                } catch (e) { }
+                return response;
+            });
+        };
+
+        const originalXHR = XMLHttpRequest.prototype.open;
+        XMLHttpRequest.prototype.open = function () {
+            this.addEventListener('load', function () {
+                if (this.responseType === 'arraybuffer' && this.response) {
+                    let decodedResponse = new TextDecoder('utf-8').decode(this.response);
+                    try {
+                        const parsedData = JSON.parse(decodedResponse);
+                        if (Array.isArray(parsedData)) {
+                             processReceivedData(parsedData);
+                        }
+                    } catch (e) { }
+                } else if (this.responseType === '' || this.responseType === 'text') {
+                    try {
+                        const response = JSON.parse(this.responseText);
+                        if (Array.isArray(response)) {
+                            processReceivedData(response);
+                        }
+                    } catch (e) { }
+                } else if (this.responseType === 'json' && this.response) {
+                    if (Array.isArray(this.response)) {
+                        processReceivedData(this.response);
+                    }
+                }
+            });
+            return originalXHR.apply(this, arguments);
+        };
+
+        createSaveButton();
         createClearButton();
+        createLoadButton();
     }
 })();
