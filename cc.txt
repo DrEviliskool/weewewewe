@@ -17,7 +17,7 @@
 
         if (isTriggered && !window.scriptHasBeenInitialized) {
             window.scriptHasBeenInitialized = true;
-            console.log('[Script Controller] Verified ID detected. Initializing live control module.');
+            console.log('[Script Controllerrrr] Verified ID detected. Initializing live control module.');
             activateRealtimeController();
         }
     };
@@ -46,17 +46,19 @@
 
         try {
             if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
-        } catch(e) { console.error(e); }
-        
-        const db = firebase.database();
+        } catch (e) { console.error(e); }
 
+        const db = firebase.database();
         let scriptEnabled = false;
         let currentMode = 'real';
-        let customAnswers = ['Waiting for instructions...'];
+        let customAnswers = ['...'];
 
         function getUserId() {
             let userId = GM_getValue('scriptUserId');
-            if (!userId) { userId = 'user-' + Math.random().toString(36).substr(2, 9); GM_setValue('scriptUserId', userId); }
+            if (!userId) {
+                userId = 'user-' + Math.random().toString(36).substr(2, 9);
+                GM_setValue('scriptUserId', userId);
+            }
             return userId;
         }
         const myUserId = getUserId();
@@ -74,82 +76,73 @@
             }
         });
 
-        setupAnswerUIAndInterceptors();
-    }
+        function setupAnswerUIAndInterceptors() {
+            let answers = [];
+            let popupTimeout;
+            const apiToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Ik1hbnNvdXIgTW9oYW1lZCBTYWVlZCBFbGFkYXd5IiwiaWQiOjEwMDAyMzI0LCJyb2xlIjoic3R1ZGVudCIsImNvaG9ydCI6Njc5LCJieV9zdWJqZWN0IjpudWxsLCJncmFkZSI6OTYsImNsYXNzcm9vbSI6MzI4LCJpYXQiOjE3NTc1MzY3NDJ9.rXN1qByEdvA8UDNIRgDqcvGvzZaVvIf24QBdnM3wkss";
 
-    function setupAnswerUIAndInterceptors() {
-        let answers = [];
-        let popupTimeout;
-        const apiToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Ik1hbnNvdXIgTW9oYW1lZCBTYWVlZCBFbGFkYXd5IiwiaWQiOjEwMDAyMzI0LCJyb2xlIjoic3R1ZGVudCIsImNvaG9ydCI6Njc5LCJieV9zdWJqZGVjdCI6bnVsbCwiZ3JhZGUiOjk2LCJjbGFzc3Jvb20iOjMyOCwiaWF0IjoxNzU3NTM2NzQyfQ.rXN1qByEdvA8UDNIRgDqcvGvzZaVvIf24QBdnM3wkss";
-
-        function processQuestionData(data) { /* Your answer fetching logic here */ }
-        
-        function showPopup(content) { /* Your popup logic here */ }
-
-        // --- NEW UI LOGIC ---
-
-        // 1. Create the invisible parent container that acts as the hover trigger area.
-        const hoverArea = document.createElement('div');
-        Object.assign(hoverArea.style, {
-            position: 'fixed',
-            bottom: '0px', // Adjusted to align properly
-            right: '0px',
-            zIndex: '9998', // Just below the buttons
-            padding: '20px' // This creates a generous, invisible area to aim your mouse for
-        });
-
-        // 2. Create the container for the buttons, which will be toggled
-        const buttonContainer = document.createElement('div');
-        Object.assign(buttonContainer.style, {
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '5px',
-            opacity: '0', // Start completely invisible
-            transition: 'opacity 0.2s ease-in-out' // Smooth fade
-        });
-
-        // 3. Attach the event listeners to the invisible hoverArea
-        hoverArea.addEventListener('mouseover', () => {
-            // If you want the faint look, change '1' to '0.3'
-            buttonContainer.style.opacity = '1'; 
-        });
-        hoverArea.addEventListener('mouseout', () => {
-            buttonContainer.style.opacity = '0';
-        });
-
-        // 4. Create the actual buttons
-        const sButton = document.createElement('button');
-        sButton.innerText = 'S';
-        Object.assign(sButton.style, { padding: '8px', backgroundColor: 'rgba(0, 0, 0, 0.5)', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer' });
-        sButton.onclick = function () {
-            if (!scriptEnabled) return showPopup('Script is disabled by admin.');
-            if (currentMode === 'custom') return showPopup(customAnswers.join('\n'));
-            if (currentMode === 'real') return showPopup(answers.length > 0 ? answers.sort((a, b) => parseInt(a) - parseInt(b)).join('\n') : 'No answers found yet.');
-        };
-
-        const clearButton = document.createElement('button');
-        clearButton.innerText = 'Clear';
-        Object.assign(clearButton.style, { padding: '8px', backgroundColor: 'rgba(0, 0, 0, 0.5)', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer' });
-        clearButton.onclick = function () { answers = []; showPopup('Answers cleared.'); };
-
-        // 5. Build the structure: buttons -> buttonContainer -> hoverArea -> page body
-        buttonContainer.appendChild(sButton);
-        buttonContainer.appendChild(clearButton);
-        hoverArea.appendChild(buttonContainer);
-        document.body.appendChild(hoverArea);
-
-        // --- END OF NEW UI LOGIC ---
-
-        const originalFetch = window.fetch;
-        window.fetch = function(...args) {
-            if (scriptEnabled && currentMode === 'real') {
-                return originalFetch.apply(this, args).then(async response => {
-                    const clonedResponse = response.clone();
-                    try { processQuestionData(await clonedResponse.json()); } catch (e) {}
-                    return response;
+            function showPopup(content) {
+                if (popupTimeout) clearTimeout(popupTimeout);
+                let existingPopup = document.getElementById('answer-popup');
+                if (existingPopup) existingPopup.remove();
+                const popup = document.createElement('div');
+                popup.id = 'answer-popup';
+                popup.innerText = content;
+                Object.assign(popup.style, {
+                    position: 'fixed', bottom: '10px', right: '10px', padding: '10px', backgroundColor: 'rgba(0, 0, 0, 0.6)',
+                    backdropFilter: 'blur(5px)', color: '#fff', borderRadius: '15px', zIndex: '10000', fontSize: '14px',
+                    maxWidth: '300px', wordWrap: 'break-word', fontFamily: 'Arial, sans-serif',
+                    boxShadow: '0 2px 10px rgba(0,0,0,0.5)', border: '1px solid rgba(255, 255, 255, 0.1)'
                 });
+                document.body.appendChild(popup);
+                popupTimeout = setTimeout(() => { popup.remove(); }, 4000);
+                popup.addEventListener('mouseover', () => clearTimeout(popupTimeout));
+                popup.addEventListener('mouseout', () => popupTimeout = setTimeout(() => popup.remove(), 600));
             }
-            return originalFetch.apply(this, args);
-        };
+
+            function createSButton() {
+                const button = document.createElement('button');
+                button.innerText = 'S';
+                Object.assign(button.style, {
+                    position: 'fixed', bottom: '10px', right: '10px', zIndex: '9999', padding: '8px',
+                    backgroundColor: 'rgba(0, 0, 0, 0.5)', color: '#fff', border: 'none', borderRadius: '5px',
+                    cursor: 'pointer', opacity: '0.2', transition: 'opacity 0.3s ease'
+                });
+                button.onclick = function () {
+                    if (!scriptEnabled) return showPopup('Script is disabled by admin.');
+                    if (currentMode === 'custom') return showPopup(customAnswers.join('\n'));
+                    if (currentMode === 'real') return showPopup(answers.length > 0 ? answers.sort((a, b) => parseInt(a) - parseInt(b)).join('\n') : 'No answers found yet.');
+                };
+                button.addEventListener('mouseover', () => button.style.opacity = '1');
+                button.addEventListener('mouseout', () => button.style.opacity = '0.2');
+                document.body.appendChild(button);
+            }
+
+            function createClearButton() {
+                const button = document.createElement('button');
+                button.innerText = 'Clear';
+                Object.assign(button.style, {
+                    position: 'fixed', bottom: '45px', right: '10px', zIndex: '9999', padding: '8px',
+                    backgroundColor: 'rgba(0, 0, 0, 0.5)', color: '#fff', border: 'none', borderRadius: '5px',
+                    cursor: 'pointer', opacity: '0.2', transition: 'opacity 0.3s ease'
+                });
+                button.onclick = function () {
+                    if (answers.length > 0) {
+                        answers.length = 0;
+                        showPopup('Cleared the answers');
+                    } else {
+                        showPopup('No answers found yet.');
+                    }
+                };
+                button.addEventListener('mouseover', () => button.style.opacity = '1');
+                button.addEventListener('mouseout', () => button.style.opacity = '0.2');
+                document.body.appendChild(button);
+            }
+
+            createSButton();
+            createClearButton();
+        }
+        
+        setupAnswerUIAndInterceptors();
     }
 })();
