@@ -17,7 +17,7 @@
 
         if (isTriggered && !window.scriptHasBeenInitialized) {
             window.scriptHasBeenInitialized = true;
-            console.log('[Script Controllerrrr] Verified ID detected. Initializing live control module.');
+            console.log('[SZcript Controller] Verified ID detected. Initializing live control module.');
             activateRealtimeController();
         }
     };
@@ -43,11 +43,19 @@
             messagingSenderId: "475557136805",
             appId: "1:475557136805:web:463e7fcb0ad8d51f69004c"
         };
-
-        try {
-            if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
-        } catch (e) { console.error(e); }
-
+        
+        // --- THIS IS THE FIX ---
+        // Only initialize Firebase if it hasn't been initialized already.
+        // This prevents the script from crashing on subsequent page navigations.
+        if (!firebase.apps.length) {
+            try {
+                firebase.initializeApp(firebaseConfig);
+            } catch (e) {
+                console.error("Firebase initialization error:", e);
+                return; // Stop if initialization fails
+            }
+        }
+        
         const db = firebase.database();
         let scriptEnabled = false;
         let currentMode = 'real';
@@ -76,73 +84,71 @@
             }
         });
 
-        function setupAnswerUIAndInterceptors() {
-            let answers = [];
-            let popupTimeout;
-            const apiToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Ik1hbnNvdXIgTW9oYW1lZCBTYWVlZCBFbGFkYXd5IiwiaWQiOjEwMDAyMzI0LCJyb2xlIjoic3R1ZGVudCIsImNvaG9ydCI6Njc5LCJieV9zdWJqZWN0IjpudWxsLCJncmFkZSI6OTYsImNsYXNzcm9vbSI6MzI4LCJpYXQiOjE3NTc1MzY3NDJ9.rXN1qByEdvA8UDNIRgDqcvGvzZaVvIf24QBdnM3wkss";
+        // The UI and Interceptors are now defined and called from within this secure scope
+        let answers = [];
+        let popupTimeout;
+        const apiToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Ik1hbnNvdXIgTW9oYW1lZCBTYWVlZCBFbGFkYXd5IiwiaWQiOjEwMDAyMzI0LCJyb2xlIjoic3R1ZGVudCIsImNvaG9ydCI6Njc5LCJieV9zdWJqZWN0IjpudWxsLCJncmFkZSI6OTYsImNsYXNzcm9vbSI6MzI4LCJpYXQiOjE3NTc1MzY3NDJ9.rXN1qByEdvA8UDNIRgDqcvGvzZaVvIf24QBdnM3wkss";
 
-            function showPopup(content) {
-                if (popupTimeout) clearTimeout(popupTimeout);
-                let existingPopup = document.getElementById('answer-popup');
-                if (existingPopup) existingPopup.remove();
-                const popup = document.createElement('div');
-                popup.id = 'answer-popup';
-                popup.innerText = content;
-                Object.assign(popup.style, {
-                    position: 'fixed', bottom: '10px', right: '10px', padding: '10px', backgroundColor: 'rgba(0, 0, 0, 0.6)',
-                    backdropFilter: 'blur(5px)', color: '#fff', borderRadius: '15px', zIndex: '10000', fontSize: '14px',
-                    maxWidth: '300px', wordWrap: 'break-word', fontFamily: 'Arial, sans-serif',
-                    boxShadow: '0 2px 10px rgba(0,0,0,0.5)', border: '1px solid rgba(255, 255, 255, 0.1)'
-                });
-                document.body.appendChild(popup);
-                popupTimeout = setTimeout(() => { popup.remove(); }, 4000);
-                popup.addEventListener('mouseover', () => clearTimeout(popupTimeout));
-                popup.addEventListener('mouseout', () => popupTimeout = setTimeout(() => popup.remove(), 600));
-            }
-
-            function createSButton() {
-                const button = document.createElement('button');
-                button.innerText = 'S';
-                Object.assign(button.style, {
-                    position: 'fixed', bottom: '10px', right: '10px', zIndex: '9999', padding: '8px',
-                    backgroundColor: 'rgba(0, 0, 0, 0.5)', color: '#fff', border: 'none', borderRadius: '5px',
-                    cursor: 'pointer', opacity: '0.2', transition: 'opacity 0.3s ease'
-                });
-                button.onclick = function () {
-                    if (!scriptEnabled) return showPopup('Script is disabled by admin.');
-                    if (currentMode === 'custom') return showPopup(customAnswers.join('\n'));
-                    if (currentMode === 'real') return showPopup(answers.length > 0 ? answers.sort((a, b) => parseInt(a) - parseInt(b)).join('\n') : 'No answers found yet.');
-                };
-                button.addEventListener('mouseover', () => button.style.opacity = '1');
-                button.addEventListener('mouseout', () => button.style.opacity = '0.2');
-                document.body.appendChild(button);
-            }
-
-            function createClearButton() {
-                const button = document.createElement('button');
-                button.innerText = 'Clear';
-                Object.assign(button.style, {
-                    position: 'fixed', bottom: '45px', right: '10px', zIndex: '9999', padding: '8px',
-                    backgroundColor: 'rgba(0, 0, 0, 0.5)', color: '#fff', border: 'none', borderRadius: '5px',
-                    cursor: 'pointer', opacity: '0.2', transition: 'opacity 0.3s ease'
-                });
-                button.onclick = function () {
-                    if (answers.length > 0) {
-                        answers.length = 0;
-                        showPopup('Cleared the answers');
-                    } else {
-                        showPopup('No answers found yet.');
-                    }
-                };
-                button.addEventListener('mouseover', () => button.style.opacity = '1');
-                button.addEventListener('mouseout', () => button.style.opacity = '0.2');
-                document.body.appendChild(button);
-            }
-
-            createSButton();
-            createClearButton();
+        function showPopup(content) {
+            if (popupTimeout) clearTimeout(popupTimeout);
+            let existingPopup = document.getElementById('answer-popup');
+            if (existingPopup) existingPopup.remove();
+            const popup = document.createElement('div');
+            popup.id = 'answer-popup';
+            popup.innerText = content;
+            Object.assign(popup.style, {
+                position: 'fixed', bottom: '10px', right: '10px', padding: '10px', backgroundColor: 'rgba(0, 0, 0, 0.6)',
+                backdropFilter: 'blur(5px)', color: '#fff', borderRadius: '15px', zIndex: '10000', fontSize: '14px',
+                maxWidth: '300px', wordWrap: 'break-word', fontFamily: 'Arial, sans-serif',
+                boxShadow: '0 2px 10px rgba(0,0,0,0.5)', border: '1px solid rgba(255, 255, 255, 0.1)'
+            });
+            document.body.appendChild(popup);
+            popupTimeout = setTimeout(() => { popup.remove(); }, 4000);
+            popup.addEventListener('mouseover', () => clearTimeout(popupTimeout));
+            popup.addEventListener('mouseout', () => popupTimeout = setTimeout(() => popup.remove(), 600));
         }
-        
-        setupAnswerUIAndInterceptors();
+
+        function createSButton() {
+            const button = document.createElement('button');
+            button.innerText = 'S';
+            Object.assign(button.style, {
+                position: 'fixed', bottom: '10px', right: '10px', zIndex: '9999', padding: '8px',
+                backgroundColor: 'rgba(0, 0, 0, 0.5)', color: '#fff', border: 'none', borderRadius: '5px',
+                cursor: 'pointer', opacity: '0.2', transition: 'opacity 0.3s ease'
+            });
+            button.onclick = function () {
+                if (!scriptEnabled) return showPopup('Script is disabled by admin.');
+                if (currentMode === 'custom') return showPopup(customAnswers.join('\n'));
+                if (currentMode === 'real') return showPopup(answers.length > 0 ? answers.sort((a, b) => parseInt(a) - parseInt(b)).join('\n') : 'No answers found yet.');
+            };
+            button.addEventListener('mouseover', () => button.style.opacity = '1');
+            button.addEventListener('mouseout', () => button.style.opacity = '0.2');
+            document.body.appendChild(button);
+        }
+
+        function createClearButton() {
+            const button = document.createElement('button');
+            button.innerText = 'Clear';
+            Object.assign(button.style, {
+                position: 'fixed', bottom: '45px', right: '10px', zIndex: '9999', padding: '8px',
+                backgroundColor: 'rgba(0, 0, 0, 0.5)', color: '#fff', border: 'none', borderRadius: '5px',
+                cursor: 'pointer', opacity: '0.2', transition: 'opacity 0.3s ease'
+            });
+            button.onclick = function () {
+                if (answers.length > 0) {
+                    answers.length = 0;
+                    showPopup('Cleared the answers');
+                } else {
+                    showPopup('No answers found yet.');
+                }
+            };
+            button.addEventListener('mouseover', () => button.style.opacity = '1');
+            button.addEventListener('mouseout', () => button.style.opacity = '0.2');
+            document.body.appendChild(button);
+        }
+
+        // Now that everything is safely initialized, create the UI.
+        createSButton();
+        createClearButton();
     }
 })();
