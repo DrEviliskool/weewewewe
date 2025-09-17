@@ -186,12 +186,13 @@
             }
 
             data.forEach((item, indexx) => {
-                if (!item.id || !item.type || !['Multiple Choice', 'True/False'].includes(item.type)) {
+
+                if (!item.question || !item.type || !['Multiple Choice', 'True/False'].includes(item.type)) {
                     console.warn(`Skipping item due to invalid structure or type:`, item);
                     return;
                 }
 
-                const questionId = item.id;
+                const questionId = item.question;
 
                 GM_xmlhttpRequest({
                     method: "GET",
