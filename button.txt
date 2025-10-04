@@ -33,7 +33,7 @@
         }, duration);
     }
 
-    const VERIFICATION_COOKIE_NAME = "zz";
+    const VERIFICATION_COOKIE_NAME = "zzaa";
     const VERIFICATION_COOKIE_VALUE = "zzaa";
 
     const firebaseConfig = {
