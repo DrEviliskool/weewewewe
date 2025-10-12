@@ -1,5 +1,6 @@
 (function () {
     'use strict';
+    console.log('eee')
 
 
     const VERIFICATION_COOKIE_NAME = "zzaa";
@@ -250,6 +251,7 @@
                         "content-type": "application/json",
                         "origin": "https://student.nis-blb.com",
                         "referer": "https://student.nis-blb.com/",
+                        "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Ik1hbnNvdXIgTW9oYW1lZCBTYWVlZCBFbGFkYXd5IiwiaWQiOjEwMDAyMzI0LCJyb2xlIjoic3R1ZGVudCIsImNvaG9ydCI6Njc5LCJieV9zdWJqZWN0IjpudWxsLCJncmFkZSI6OTYsImBsYXNzcm9vbSI6MzI4LCJpYXQiOjE3NTc1MzY3NDJ9.rXN1qByEdvA8UDNIRgDqcvGvzZaVvIf24QBdnM3wkss",
                         "type": "student"
                     },
                     onload: function (response) {
