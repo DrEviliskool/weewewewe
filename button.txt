@@ -36,29 +36,6 @@
     const VERIFICATION_COOKIE_NAME = "zzaa";
     const VERIFICATION_COOKIE_VALUE = "zzaa";
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     const firebaseConfig = {
         apiKey: "AIzaSyCzfEgRutixv74_ydXBJmu8ImLNDcduoVk",
         authDomain: "hehehaha-dda0e.firebaseapp.com",
@@ -437,13 +414,21 @@
             return originalXHR.apply(this, arguments);
         };
 
+    
+
         if (isVerified()) {
-            showNotification("Verification cookie found. Creating buttons.", 500);
-            createSaveButton();
-            createClearButton();
-            createLoadButton();
+            const waitForFirebase = setInterval(() => {
+                if (firebaseReady && currentUserId && dbInstance) {
+                    clearInterval(waitForFirebase);
+                    showNotification("Verification cookie found. Creating buttons.", 500);
+                    createSaveButton();
+                    createClearButton();
+                    createLoadButton();
+                }
+            }, 500);
         } else {
-            console.log("Verification cookie not found. Buttons will not be created.");
-        }
+        console.log("Verification cookie not found. Buttons will not be created.");
+}
+
     }
 })();
