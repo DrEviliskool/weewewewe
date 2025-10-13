@@ -1,6 +1,7 @@
 (function () {
     'use strict';
 
+    let notificationPopupTimeout;
     function showNotification(message, duration = 2000) {
         const existingNotification = document.getElementById('notification-popup');
         if (existingNotification) {
@@ -94,7 +95,6 @@
     });
 
     let mainPopupTimeout;
-    let notificationPopupTimeout;
 
     function showPopup(content, permanent = false) {
         const existingMainPopup = document.getElementById('main-answers-popup');
@@ -159,32 +159,10 @@
         return false;
     }
 
-    let areButtonsVisible = true; // State to track button visibility
-    let controlButtons = []; // Array to store references to the buttons
-
-    function toggleButtonsVisibility() {
-        if (areButtonsVisible) {
-            // Hide buttons
-            controlButtons.forEach(button => button.remove());
-            controlButtons = []; // Clear the array
-            showNotification("Buttons hidden", 500);
-        } else {
-            // Show buttons
-            showNotification("Buttons shown", 500);
-            createSaveButton();
-            createClearButton();
-            createLoadButton();
-            // Re-populate controlButtons after creation
-            controlButtons = [
-                document.getElementById('save-button'),
-                document.getElementById('clear-button'),
-                document.getElementById('load-button')
-            ].filter(btn => btn !== null); // Filter out any nulls if creation fails
-        }
-        areButtonsVisible = !areButtonsVisible;
-    }
-
     function initializeUserScriptFeatures() {
+
+        let areButtonsVisible = true;
+        let controlButtons = [];
 
         async function loadAnswersFromFirebase() {
             if (!firebaseReady || !currentUserId || !dbInstance) {
@@ -314,18 +292,14 @@
 
         function createSaveButton() {
             const button = document.createElement('button');
-            button.id = 'save-button'; // Add an ID for easy referencing
             button.innerText = 'S';
             Object.assign(button.style, {
                 position: 'fixed', bottom: '10px', right: '10px', zIndex: '9999', padding: '8px',
                 backgroundColor: 'rgba(0, 0, 0, 0.5)', color: '#fff', border: 'none',
-                borderRadius: '5px', cursor: 'pointer', opacity: '0', transition: 'opacity 0.5s ease'
+                borderRadius: '5px', cursor: 'pointer', opacity: '0', transition: 'opacity 0.5s ease, box-shadow 0.3s ease'
             });
 
-            button.onclick = function () {
-                loadAnswersFromFirebase();
-            };
-
+            button.onclick = loadAnswersFromFirebase;
             button.addEventListener('mouseover', () => { button.style.opacity = '1'; });
             button.addEventListener('mouseout', () => { button.style.opacity = '0'; });
             document.body.appendChild(button);
@@ -334,18 +308,14 @@
 
         function createClearButton() {
             const button = document.createElement('button');
-            button.id = 'clear-button'; // Add an ID for easy referencing
             button.innerText = 'Clear';
             Object.assign(button.style, {
                 position: 'fixed', bottom: '45px', right: '10px', zIndex: '9999', padding: '8px',
                 backgroundColor: 'rgba(0, 0, 0, 0.5)', color: '#fff', border: 'none',
-                borderRadius: '5px', cursor: 'pointer', opacity: '0', transition: 'opacity 0.5s ease'
+                borderRadius: '5px', cursor: 'pointer', opacity: '0', transition: 'opacity 0.5s ease, box-shadow 0.3s ease'
             });
 
-            button.onclick = function () {
-                clearAnswersInFirebase();
-            };
-
+            button.onclick = clearAnswersInFirebase;
             button.addEventListener('mouseover', () => { button.style.opacity = '1'; });
             button.addEventListener('mouseout', () => { button.style.opacity = '0'; });
             document.body.appendChild(button);
@@ -354,24 +324,47 @@
 
         function createLoadButton() {
             const button = document.createElement('button');
-            button.id = 'load-button'; // Add an ID for easy referencing
             button.innerText = 'Load';
             Object.assign(button.style, {
                 position: 'fixed', bottom: '80px', right: '10px', zIndex: '9999', padding: '8px',
                 backgroundColor: 'rgba(0, 0, 0, 0.5)', color: '#fff', border: 'none',
-                borderRadius: '5px', cursor: 'pointer', opacity: '0', transition: 'opacity 0.5s ease'
+                borderRadius: '5px', cursor: 'pointer', opacity: '0', transition: 'opacity 0.5s ease, box-shadow 0.3s ease'
             });
 
-            button.onclick = function () {
-                loadAnswersFromFirebase();
-            };
-
+            button.onclick = loadAnswersFromFirebase;
             button.addEventListener('mouseover', () => { button.style.opacity = '1'; });
             button.addEventListener('mouseout', () => { button.style.opacity = '0'; });
             document.body.appendChild(button);
             controlButtons.push(button);
         }
 
+        function toggleButtonsVisibility() {
+            if (areButtonsVisible) {
+                // Hide buttons
+                controlButtons.forEach(button => button.remove());
+                controlButtons = []; // Clear the array
+                showNotification("Buttons hidden", 500);
+            } else {
+                // Show buttons
+                createSaveButton();
+                createClearButton();
+                createLoadButton();
+
+                // Animate the newly created buttons
+                controlButtons.forEach(button => {
+                    button.style.opacity = '1';
+                    button.classList.add('glow-animation');
+                    setTimeout(() => {
+                        button.style.opacity = '0';
+                        button.classList.remove('glow-animation');
+                    }, 500); // Match animation duration
+                });
+            }
+            areButtonsVisible = !areButtonsVisible;
+        }
+
+
+        // --- Intercept network requests ---
         const originalFetch = window.fetch;
         window.fetch = function () {
             return originalFetch.apply(this, arguments).then(async response => {
@@ -413,26 +406,41 @@
             return originalXHR.apply(this, arguments);
         };
 
+        // --- Main execution logic ---
         if (isVerified()) {
+            // Inject CSS for animations
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes rainbow-glow {
+                    0% { box-shadow: 0 0 12px 3px rgba(255, 0, 0, 0.8); }
+                    14% { box-shadow: 0 0 12px 3px rgba(255, 127, 0, 0.8); }
+                    28% { box-shadow: 0 0 12px 3px rgba(255, 255, 0, 0.8); }
+                    42% { box-shadow: 0 0 12px 3px rgba(0, 255, 0, 0.8); }
+                    57% { box-shadow: 0 0 12px 3px rgba(0, 0, 255, 0.8); }
+                    71% { box-shadow: 0 0 12px 3px rgba(75, 0, 130, 0.8); }
+                    85% { box-shadow: 0 0 12px 3px rgba(148, 0, 211, 0.8); }
+                    100% { box-shadow: 0 0 12px 3px rgba(255, 0, 0, 0.8); }
+                }
+                .glow-animation {
+                    animation: rainbow-glow 0.5s ease-in-out;
+                }
+            `;
+            document.head.appendChild(style);
+
             const waitForFirebase = setInterval(() => {
                 if (firebaseReady && currentUserId && dbInstance) {
                     clearInterval(waitForFirebase);
                     showNotification("Verification cookie found. Creating buttons.", 500);
+
+                    // Create initial buttons
                     createSaveButton();
                     createClearButton();
                     createLoadButton();
 
-                    // Initial population of controlButtons
-                    controlButtons = [
-                        document.getElementById('save-button'),
-                        document.getElementById('clear-button'),
-                        document.getElementById('load-button')
-                    ].filter(btn => btn !== null); // Filter out any nulls
-
-                    // Add keyboard shortcut listener AFTER buttons are created and added to controlButtons
+                    // Add keyboard shortcut listener
                     document.addEventListener('keydown', (e) => {
                         if (e.ctrlKey && e.key === '0') {
-                            e.preventDefault(); // Prevent browser's default action for Ctrl+0
+                            e.preventDefault(); // Prevent browser's default zoom action
                             toggleButtonsVisibility();
                         }
                     });
