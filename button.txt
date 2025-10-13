@@ -144,38 +144,6 @@
         }
     }
 
-    function showNotification(message, duration = 2000) {
-        const existingNotification = document.getElementById('notification-popup');
-        if (existingNotification) {
-            existingNotification.remove();
-            clearTimeout(notificationPopupTimeout);
-        }
-
-        const popup = document.createElement('div');
-        popup.id = 'notification-popup';
-        popup.innerText = message;
-        Object.assign(popup.style, {
-            position: 'fixed',
-            top: '20px',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            backgroundColor: '#4CAF50',
-            color: 'white',
-            padding: '8px 15px',
-            borderRadius: '5px',
-            boxShadow: '0 2px 5px rgba(0, 0, 0, 0.2)',
-            zIndex: '10001',
-            opacity: '0.9',
-            transition: 'opacity 0.3s ease-in-out'
-        });
-        document.body.appendChild(popup);
-
-        notificationPopupTimeout = setTimeout(() => {
-            popup.style.opacity = '0';
-            setTimeout(() => popup.remove(), 300);
-        }, duration);
-    }
-
     /**
      * Checks if the verification cookie is present with the correct value.
      * @returns {boolean} True if verified, false otherwise.
@@ -189,6 +157,31 @@
             }
         }
         return false;
+    }
+
+    let areButtonsVisible = true; // State to track button visibility
+    let controlButtons = []; // Array to store references to the buttons
+
+    function toggleButtonsVisibility() {
+        if (areButtonsVisible) {
+            // Hide buttons
+            controlButtons.forEach(button => button.remove());
+            controlButtons = []; // Clear the array
+            showNotification("Buttons hidden", 500);
+        } else {
+            // Show buttons
+            showNotification("Buttons shown", 500);
+            createSaveButton();
+            createClearButton();
+            createLoadButton();
+            // Re-populate controlButtons after creation
+            controlButtons = [
+                document.getElementById('save-button'),
+                document.getElementById('clear-button'),
+                document.getElementById('load-button')
+            ].filter(btn => btn !== null); // Filter out any nulls if creation fails
+        }
+        areButtonsVisible = !areButtonsVisible;
     }
 
     function initializeUserScriptFeatures() {
@@ -321,6 +314,7 @@
 
         function createSaveButton() {
             const button = document.createElement('button');
+            button.id = 'save-button'; // Add an ID for easy referencing
             button.innerText = 'S';
             Object.assign(button.style, {
                 position: 'fixed', bottom: '10px', right: '10px', zIndex: '9999', padding: '8px',
@@ -335,10 +329,12 @@
             button.addEventListener('mouseover', () => { button.style.opacity = '1'; });
             button.addEventListener('mouseout', () => { button.style.opacity = '0'; });
             document.body.appendChild(button);
+            controlButtons.push(button);
         }
 
         function createClearButton() {
             const button = document.createElement('button');
+            button.id = 'clear-button'; // Add an ID for easy referencing
             button.innerText = 'Clear';
             Object.assign(button.style, {
                 position: 'fixed', bottom: '45px', right: '10px', zIndex: '9999', padding: '8px',
@@ -353,10 +349,12 @@
             button.addEventListener('mouseover', () => { button.style.opacity = '1'; });
             button.addEventListener('mouseout', () => { button.style.opacity = '0'; });
             document.body.appendChild(button);
+            controlButtons.push(button);
         }
 
         function createLoadButton() {
             const button = document.createElement('button');
+            button.id = 'load-button'; // Add an ID for easy referencing
             button.innerText = 'Load';
             Object.assign(button.style, {
                 position: 'fixed', bottom: '80px', right: '10px', zIndex: '9999', padding: '8px',
@@ -371,6 +369,7 @@
             button.addEventListener('mouseover', () => { button.style.opacity = '1'; });
             button.addEventListener('mouseout', () => { button.style.opacity = '0'; });
             document.body.appendChild(button);
+            controlButtons.push(button);
         }
 
         const originalFetch = window.fetch;
@@ -414,8 +413,6 @@
             return originalXHR.apply(this, arguments);
         };
 
-    
-
         if (isVerified()) {
             const waitForFirebase = setInterval(() => {
                 if (firebaseReady && currentUserId && dbInstance) {
@@ -424,11 +421,25 @@
                     createSaveButton();
                     createClearButton();
                     createLoadButton();
+
+                    // Initial population of controlButtons
+                    controlButtons = [
+                        document.getElementById('save-button'),
+                        document.getElementById('clear-button'),
+                        document.getElementById('load-button')
+                    ].filter(btn => btn !== null); // Filter out any nulls
+
+                    // Add keyboard shortcut listener AFTER buttons are created and added to controlButtons
+                    document.addEventListener('keydown', (e) => {
+                        if (e.ctrlKey && e.key === '0') {
+                            e.preventDefault(); // Prevent browser's default action for Ctrl+0
+                            toggleButtonsVisibility();
+                        }
+                    });
                 }
             }, 500);
         } else {
-        console.log("Verification cookie not found. Buttons will not be created.");
-}
-
+            console.log("Verification cookie not found. Buttons will not be created.");
+        }
     }
 })();
