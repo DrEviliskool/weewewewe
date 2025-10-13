@@ -128,8 +128,8 @@
         if (!permanent) {
             mainPopupTimeout = setTimeout(() => {
                 popup.style.opacity = '0';
-                setTimeout(() => popup.remove(), 300);
-            }, 900);
+                setTimeout(() => popup.remove(), 200);
+            }, 500);
 
             popup.addEventListener('mouseover', () => {
                 clearTimeout(mainPopupTimeout);
@@ -138,8 +138,8 @@
             popup.addEventListener('mouseout', () => {
                 mainPopupTimeout = setTimeout(() => {
                     popup.style.opacity = '0';
-                    setTimeout(() => popup.remove(), 300);
-                }, 900);
+                    setTimeout(() => popup.remove(), 200);
+                }, 500);
             });
         }
     }
