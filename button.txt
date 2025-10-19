@@ -445,11 +445,14 @@
                     });
 
                     document.addEventListener('keydown', (key) => {
-                        key.preventDefault()
-                        loadAnswersFromFirebase()
+
+                        if (key.ctrlKey && key.key === '9') {
+                            key.preventDefault()
+                            loadAnswersFromFirebase()
+                        }
                     })
 
-                    
+
                 }
             }, 500);
         } else {
