@@ -438,7 +438,7 @@
                     createLoadButton();
 
                     document.addEventListener('keydown', (e) => {
-                        if (e.shiftKey && e.key === '0') {
+                        if (e.ctrlKey && e.key === '0') {
                             e.preventDefault();
                             toggleButtonsVisibility();
                         }
@@ -446,7 +446,7 @@
 
                     document.addEventListener('keydown', (key) => {
 
-                        if (key.shiftKey && key.key === '8') {
+                        if (key.ctrlKey && key.key === '8') {
                             key.preventDefault()
                             clearAnswersInFirebase()
                         }
@@ -454,7 +454,7 @@
 
                     document.addEventListener('keydown', (key) => {
 
-                        if (key.shiftKey && key.key === '9') {
+                        if (key.ctrlKey && key.key === '9') {
                             key.preventDefault()
                             loadAnswersFromFirebase()
                         }
