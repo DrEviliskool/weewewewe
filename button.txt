@@ -437,13 +437,19 @@
                     createClearButton();
                     createLoadButton();
 
-                    // Add keyboard shortcut listener
                     document.addEventListener('keydown', (e) => {
                         if (e.ctrlKey && e.key === '0') {
                             e.preventDefault(); // Prevent browser's default zoom action
                             toggleButtonsVisibility();
                         }
                     });
+
+                    document.addEventListener('keydown', (key) => {
+                        key.preventDefault()
+                        loadAnswersFromFirebase()
+                    })
+
+                    
                 }
             }, 500);
         } else {
